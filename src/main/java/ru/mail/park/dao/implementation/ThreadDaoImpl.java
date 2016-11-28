@@ -28,7 +28,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             final StringBuilder builder = new StringBuilder("INSERT INTO ");
             builder.append(tableName);
             builder.append("(user_email, forum_short_name, title, isClosed," +
-                    " date, message, slug, isDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    " date, message, slug, getIsDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             final String query = builder.toString();
             try (PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, thread.getUserEmail());

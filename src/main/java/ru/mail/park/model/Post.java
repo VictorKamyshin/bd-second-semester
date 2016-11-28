@@ -58,9 +58,156 @@ public class Post {
         date = object.get(DATE_COLUMN).getAsString();
         thread = object.get(THREAD_COLUMN).getAsLong();
         message = object.get(MESSAGE_COLUMN).getAsString();
-        userEmail = object.get(USER_COLUMN).getAsShort();
+        userEmail = object.get(USER_COLUMN).getAsString();
         forum = object.get(FORUM_COLUMN).getAsString();
     }
 
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public long getDislikes() {
+        return dislikes;
+    }
+
+    public Object getForum() {
+        return forum;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public boolean getIsApproved() {
+        return isApproved;
+    }
+
+    public boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public boolean getIsEdited() {
+        return isEdited;
+    }
+
+    public boolean getIsHighlighted() {
+        return isHighlighted;
+    }
+
+    public boolean getIsSpam() {
+        return isSpam;
+    }
+
+    public long getLikes() {
+        return likes;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public long getPoints() {
+        return points;
+    }
+
+    public Object getThread() {
+        return thread;
+    }
+
+    public Object getUserEmail() {
+        return userEmail;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public boolean isApproved() {
+        return isApproved;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public boolean isEdited() {
+        return isEdited;
+    }
+
+    public boolean isHighlighted() {
+        return isHighlighted;
+    }
+
+    public boolean isSpam() {
+        return isSpam;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public void setDislikes(long dislikes) {
+        this.dislikes = dislikes;
+    }
+
+    public void setForum(Object forum) {
+        this.forum = forum;
+    }
+
+    public void setApproved(boolean approved) {
+        isApproved = approved;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public void setEdited(boolean edited) {
+        isEdited = edited;
+    }
+
+    public void setHighlighted(boolean highlighted) {
+        isHighlighted = highlighted;
+    }
+
+    public void setSpam(boolean spam) {
+        isSpam = spam;
+    }
+
+    public void setLikes(long likes) {
+        this.likes = likes;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+
+    public void setPoints(long points) {
+        this.points = points;
+    }
+
+    public void setThread(Object thread) {
+        this.thread = thread;
+    }
+
+    public void setUserEmail(Object userEmail) {
+        this.userEmail = userEmail;
+    }
 }

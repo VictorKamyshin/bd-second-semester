@@ -14,7 +14,7 @@ public class Thread {
     private static final String DATE_COLUMN = "date";
     private static final String MESSAGE_COLUMN = "message";
     private static final String SLUG_COLUMN = "slug";
-    public static final String ISDELETED_COLUMN = "isDeleted";
+    public static final String ISDELETED_COLUMN = "getIsDeleted";
     public static final String TABLE_NAME = "threads";
     public static final String SUBSCRIPTION_TABLE_NAME = "Subscriptions";
 
