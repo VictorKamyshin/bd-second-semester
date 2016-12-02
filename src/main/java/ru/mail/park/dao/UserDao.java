@@ -7,4 +7,8 @@ import ru.mail.park.response.Response;
  */
 public interface UserDao extends BaseDao {
     public Response create(String userCreateJson);
+
+    public Response follow(String userFollowJson);
+
+    public Response details(String userEmail);
 }

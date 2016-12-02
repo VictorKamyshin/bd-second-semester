@@ -2,6 +2,9 @@ package ru.mail.park.model;
 
 import com.google.gson.JsonObject;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
  * Created by victor on 23.11.16.
  */
@@ -41,6 +44,38 @@ public class User {
         this.listOfFollowers = new String[]{};
         this.listOfFollowing = new String[]{};
         this.listOfSubscriptions = new Integer[]{};
+    }
+
+    public User(ResultSet resultSet) throws SQLException{
+        about = resultSet.getString(ABOUT_COLUMN);
+        email = resultSet.getString(EMAIL_COLUMN);
+        id = resultSet.getLong(ID_COLUMN);
+        isAnonymous = resultSet.getBoolean(ISANONYMOUS_COLUMN);
+        name = resultSet.getString(NAME_COLUMN);
+        username = resultSet.getString(USERNAME_COLUMN);
+
+        try{
+            listOfFollowers = resultSet.getString(FOLLOWERS_COLUMN).split(",");
+        } catch(NullPointerException e){
+            listOfFollowers = new String[]{};
+        }
+
+        try{
+            listOfFollowing = resultSet.getString(FOLLOWING_COLUMN).split(",");
+        } catch (NullPointerException e){
+            listOfFollowing = new String[]{};
+        }
+
+        try{
+            String[] threadsIds = resultSet.getString(SUBSCRIPTIONS_COLUMN).split(",");
+            listOfSubscriptions = new Integer[threadsIds.length];
+            for( Integer i = 0; i < threadsIds.length; i++) {
+                listOfSubscriptions[i] = Integer.parseInt(threadsIds[i]);
+            }
+        } catch (NullPointerException e){
+            listOfSubscriptions = new Integer[]{};
+        }
+
     }
 
     public User(JsonObject object){

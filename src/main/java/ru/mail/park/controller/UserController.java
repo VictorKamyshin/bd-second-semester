@@ -1,9 +1,6 @@
 package ru.mail.park.controller;
 
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.mail.park.dao.UserDao;
 import ru.mail.park.dao.implementation.UserDaoImpl;
 import ru.mail.park.response.ForumApiResponse;
@@ -31,5 +28,15 @@ public class UserController extends AbstractController {
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ForumApiResponse create(@RequestBody String body){
         return new ForumApiResponse(userDao.create(body));
+    }
+
+    @RequestMapping(value = "/details", method = RequestMethod.GET)
+    public ForumApiResponse details(@RequestParam(value = "user") String email) {
+        return new ForumApiResponse(userDao.details(email));
+    }
+
+    @RequestMapping(value = "/follow", method = RequestMethod.POST)
+    public ForumApiResponse follow(@RequestBody String body) {
+        return new ForumApiResponse(userDao.follow(body));
     }
 }

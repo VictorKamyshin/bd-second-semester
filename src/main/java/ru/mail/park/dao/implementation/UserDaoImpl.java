@@ -1,7 +1,7 @@
 package ru.mail.park.dao.implementation;
 
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.xml.internal.ws.api.pipe.Fiber;
 import ru.mail.park.dao.UserDao;
 import ru.mail.park.model.User;
 import ru.mail.park.response.Response;
@@ -20,6 +20,57 @@ public class UserDaoImpl extends BaseDaoImpl implements UserDao {
         this.tableName = User.TABLE_NAME;
         this.followerTableName = User.FOLLOWER_TABLE_NAME;
         this.ds = dataSource;
+    }
+
+    @Override
+    public Response follow(String userFollowJson){
+        final String follower;
+        try (Connection connection = ds.getConnection()) {
+            final JsonObject userFollowObject = new JsonParser().parse(userFollowJson).getAsJsonObject();
+            follower = userFollowObject.get("follower").getAsString();
+            final String followee = userFollowObject.get("followee").getAsString();
+            try {
+                final String createFollow = "INSERT INTO Followers (user, follower) VALUES (?,?)";
+                try (PreparedStatement ps = connection.prepareStatement(createFollow)) {
+                    ps.setString(1, followee);
+                    ps.setString(2, follower);
+                    ps.execute();
+                }
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        } catch (SQLException e){
+            return new Response(ResponseStatus.INCORRECT_REQUEST);
+        }
+        return new Response(ResponseStatus.OK,follower);
+    }
+
+    @Override
+    public Response details(String userEmail){
+        final User user;
+        try (Connection connection = ds.getConnection()) {
+            StringBuilder getUserDetails = new StringBuilder("SELECT users.*, ");
+            getUserDetails.append("group_concat(distinct f1.follower_email) as followers, ");
+            getUserDetails.append("group_concat(distinct f2.following_email) as following, ");
+            getUserDetails.append("group_concat(distinct s.thread_id) as subscriptions");
+            getUserDetails.append(" FROM users");
+            getUserDetails.append(" LEFT JOIN followers f1 on f1.follower_email = user.email");
+            getUserDetails.append(" LEFT JOIN followers f2 on f2.following_emal = user.email");
+            getUserDetails.append(" LEFT JOIN subscription s on s.user_email = user.email");
+            getUserDetails.append(" WHERE users.email = ?");
+            try (PreparedStatement ps = connection.prepareStatement(getUserDetails.toString())) {
+                ps.setString(1,userEmail);
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    resultSet.next();
+                    user = new User(resultSet);
+                } catch (Exception e) {
+                    return new Response(ResponseStatus.NOT_FOUND);
+                }
+            }
+        } catch (SQLException e) {
+            return new Response(ResponseStatus.INCORRECT_REQUEST);
+        }
+        return new Response(ResponseStatus.OK,user);
     }
 
     @Override
