@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import ru.mail.park.dao.ForumDao;
 import ru.mail.park.dao.implementation.ForumDaoImpl;
-import ru.mail.park.response.Response;
+import ru.mail.park.response.ForumApiResponse;
 
 import javax.sql.DataSource;
 
@@ -29,8 +29,8 @@ public class ForumController extends AbstractController{
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public Response create(@RequestBody String body){
-        return forumDao.create(body);
+    public ForumApiResponse create(@RequestBody String body){
+        return new ForumApiResponse(forumDao.create(body));
     }
 
 }

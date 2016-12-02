@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import ru.mail.park.dao.ThreadDao;
 import ru.mail.park.dao.implementation.ThreadDaoImpl;
-import ru.mail.park.response.Response;
+import ru.mail.park.response.ForumApiResponse;
 
 import javax.sql.DataSource;
 
@@ -29,7 +29,7 @@ public class ThreadController extends AbstractController{
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public Response create(@RequestBody String body){
-        return threadDao.create(body);
+    public ForumApiResponse create(@RequestBody String body){
+        return new ForumApiResponse(threadDao.create(body));
     }
 }

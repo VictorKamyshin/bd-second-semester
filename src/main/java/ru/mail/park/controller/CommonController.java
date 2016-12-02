@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import ru.mail.park.dao.CommonDao;
 import ru.mail.park.dao.implementation.CommonDaoImpl;
+import ru.mail.park.response.ForumApiResponse;
 import ru.mail.park.response.Response;
 import ru.mail.park.response.ResponseStatus;
 
@@ -29,8 +30,8 @@ public class CommonController extends AbstractController {
     }
 
     @RequestMapping(value = "/clear", method = RequestMethod.POST)
-    public Response clear() {
+    public ForumApiResponse clear() {
         commonDao.truncateAllTables();
-        return new Response(ResponseStatus.OK);
+        return new ForumApiResponse(new Response(ResponseStatus.OK));
     }
 }

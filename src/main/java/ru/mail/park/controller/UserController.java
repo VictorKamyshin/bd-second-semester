@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import ru.mail.park.dao.UserDao;
 import ru.mail.park.dao.implementation.UserDaoImpl;
-import ru.mail.park.response.Response;
+import ru.mail.park.response.ForumApiResponse;
 
 import javax.sql.DataSource;
 
@@ -29,7 +29,7 @@ public class UserController extends AbstractController {
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public Response create(@RequestBody String body){
-        return userDao.create(body);
+    public ForumApiResponse create(@RequestBody String body){
+        return new ForumApiResponse(userDao.create(body));
     }
 }
