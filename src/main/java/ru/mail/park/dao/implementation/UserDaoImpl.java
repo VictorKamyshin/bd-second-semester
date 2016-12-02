@@ -30,8 +30,31 @@ public class UserDaoImpl extends BaseDaoImpl implements UserDao {
             follower = userFollowObject.get("follower").getAsString();
             final String followee = userFollowObject.get("followee").getAsString();
             try {
-                final String createFollow = "INSERT INTO Followers (user, follower) VALUES (?,?)";
+                final String createFollow = "INSERT INTO Followers (follower_email, following_email) VALUES (?,?)";
                 try (PreparedStatement ps = connection.prepareStatement(createFollow)) {
+                    ps.setString(1, followee);
+                    ps.setString(2, follower);
+                    ps.execute();
+                }
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        } catch (SQLException e){
+            return new Response(ResponseStatus.INCORRECT_REQUEST);
+        }
+        return new Response(ResponseStatus.OK,follower);
+    }
+
+    @Override
+    public Response unfollow(String userFollowJson){
+        final String follower;
+        try (Connection connection = ds.getConnection()) {
+            final JsonObject userFollowObject = new JsonParser().parse(userFollowJson).getAsJsonObject();
+            follower = userFollowObject.get("follower").getAsString();
+            final String followee = userFollowObject.get("followee").getAsString();
+            try {
+                final String deleteFollow = "DELETE FROM Followers WHERE follower_email=? AND following_email=?";
+                try (PreparedStatement ps = connection.prepareStatement(deleteFollow)) {
                     ps.setString(1, followee);
                     ps.setString(2, follower);
                     ps.execute();
