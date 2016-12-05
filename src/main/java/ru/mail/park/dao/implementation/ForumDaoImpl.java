@@ -9,6 +9,7 @@ import ru.mail.park.response.ResponseStatus;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Arrays;
 
 /**
  * Created by victor on 23.11.16.
@@ -26,16 +27,6 @@ public class ForumDaoImpl extends BaseDaoImpl implements ForumDao {
         final Forum forum;
         try (Connection connection = ds.getConnection()) {
             forum = new Forum(new JsonParser().parse(forumCreateJson).getAsJsonObject());
-            final StringBuilder builderForUserEmail = new StringBuilder("SELECT id from ").append(usertableName)
-                    .append("where email = \'").append(forum.getUserEmail()).append('\'');
-            final String queryForUserId = builderForUserEmail.toString();
-            //тут крч, два стула, на одном нормализация и размеры базы,
-            //на втором - скорость обработки запросов
-            //есть мысль о том, что можно вытащить в вспомогательные таблицы вообще все
-            //нормализация при этом идет по пизде, но и хер с ней, можно даже на внешние ключи забить
-            //мы их и не используем, надо только в error_test заглянуть
-            //заглянули, каких-то засад с внешними ключами там нет
-
             final StringBuilder builder = new StringBuilder("INSERT INTO ");
             builder.append(tableName);
             builder.append("(name, short_name, user_email) VALUES (?, ?, ?)");
@@ -43,7 +34,7 @@ public class ForumDaoImpl extends BaseDaoImpl implements ForumDao {
             try (PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, forum.getName());
                 ps.setString(2, forum.getShortName());
-                ps.setString(3, forum.getUserEmail());
+                ps.setString(3, forum.getUser().toString());
                 ps.executeUpdate();
                 try (ResultSet resultSet = ps.getGeneratedKeys()) {
                     resultSet.next();
@@ -58,4 +49,36 @@ public class ForumDaoImpl extends BaseDaoImpl implements ForumDao {
         }
         return new  Response(ResponseStatus.OK, forum);
     }
+
+    @Override
+    public Response details(String forumShortName, String[] related){
+        final Forum forum;
+        try (Connection connection = ds.getConnection()) {
+            final StringBuilder forumDetails = new StringBuilder("SELECT * FROM ");
+            forumDetails.append(tableName);
+            forumDetails.append(" WHERE short_name  = ? ");
+            try (PreparedStatement ps = connection.prepareStatement(forumDetails.toString())) {
+                ps.setString(1, forumShortName);
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    resultSet.next();
+                    forum = new Forum(resultSet);
+                } catch (SQLException e) {
+                    return handeSQLException(e);
+                }
+                if (related != null) {
+                    if (Arrays.asList(related).contains("user")) {
+                        String email = forum.getUser().toString();
+                        //тут можно либо денормализовать базу и хранить у форума все данные юзера
+                        //скорее всего нет, т.к. у юзера еще есть список фоловеров, который так просто не денормализуешь
+                        forum.setUser(new UserDaoImpl(ds).details(email).getObject());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, forum);
+    }
+
+
 }

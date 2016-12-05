@@ -46,10 +46,10 @@ public class UserDaoImpl extends BaseDaoImpl implements UserDao {
     }
 
     @Override
-    public Response unfollow(String userFollowJson){
+    public Response unfollow(String userUnfollowJson){
         final String follower;
         try (Connection connection = ds.getConnection()) {
-            final JsonObject userFollowObject = new JsonParser().parse(userFollowJson).getAsJsonObject();
+            final JsonObject userFollowObject = new JsonParser().parse(userUnfollowJson).getAsJsonObject();
             follower = userFollowObject.get("follower").getAsString();
             final String followee = userFollowObject.get("followee").getAsString();
             try {

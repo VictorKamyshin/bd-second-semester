@@ -7,4 +7,6 @@ import ru.mail.park.response.Response;
  */
 public interface ForumDao extends BaseDao {
     public Response create(String forumCreateJson);
+
+    public Response details(String forumShortName, String[] related);
 }
