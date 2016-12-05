@@ -2,10 +2,16 @@ package ru.mail.park.model;
 
 import com.google.gson.JsonObject;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
  * Created by victor on 23.11.16.
  */
 public class Thread {
+    public static final String TABLE_NAME = "Threads";
+    public static final String SUBSCRIPTION_TABLE_NAME = "Subscriptions";
+
     private static final String ID_COLUMN = "id";
     private static final String USER_EMAIL_COLUMN = "user";
     private static final String FORUM_COLUMN = "forum";
@@ -14,13 +20,11 @@ public class Thread {
     private static final String DATE_COLUMN = "date";
     private static final String MESSAGE_COLUMN = "message";
     private static final String SLUG_COLUMN = "slug";
-    public static final String ISDELETED_COLUMN = "getIsDeleted";
-    public static final String TABLE_NAME = "threads";
-    public static final String SUBSCRIPTION_TABLE_NAME = "Subscriptions";
+    private static final String ISDELETED_COLUMN = "getIsDeleted";
 
     private long id;
-    private String userEmail;
-    private String forumShortName;
+    private Object user;
+    private Object forum;
     private String title;
     private Boolean isClosed;
     private String date;
@@ -30,8 +34,8 @@ public class Thread {
 
     public Thread(JsonObject object) {
         id = object.has(ID_COLUMN) ? object.get(ID_COLUMN).getAsInt() : 0;
-        userEmail = object.get(USER_EMAIL_COLUMN).getAsString();
-        forumShortName = object.get(FORUM_COLUMN).getAsString();
+        user = object.get(USER_EMAIL_COLUMN).getAsString();
+        forum = object.get(FORUM_COLUMN).getAsString();
         title = object.get(TITLE_COLUMN).getAsString();
         isClosed = object.get(ISCLOSED_COLUMN).getAsBoolean();
         date = object.get(DATE_COLUMN).getAsString();
@@ -40,16 +44,28 @@ public class Thread {
         isDeleted = object.get(ISDELETED_COLUMN).getAsBoolean();
     }
 
+    public Thread(ResultSet resultSet) throws SQLException {
+        id = resultSet.getLong(ID_COLUMN);
+        user = resultSet.getString(USER_EMAIL_COLUMN);
+        forum = resultSet.getString(FORUM_COLUMN);
+        title = resultSet.getString(TITLE_COLUMN);
+        isClosed = resultSet.getBoolean(ISCLOSED_COLUMN);
+        date = resultSet.getString(DATE_COLUMN);
+        message = resultSet.getString(MESSAGE_COLUMN);
+        slug = resultSet.getString(SLUG_COLUMN);
+        isDeleted = resultSet.getBoolean(ISDELETED_COLUMN);
+    }
+
     public void setId(long id) {
         this.id = id;
     }
 
-    public String getUserEmail() {
-        return userEmail;
+    public Object getUser() {
+        return user;
     }
 
-    public String getForumShortName() {
-        return forumShortName;
+    public Object getForum() {
+        return forum;
     }
 
     public String getTitle() {
@@ -74,5 +90,13 @@ public class Thread {
 
     public Boolean getDeleted() {
         return isDeleted;
+    }
+
+    public void setUser(Object user) {
+        this.user = user;
+    }
+
+    public void setForum(Object forum) {
+        this.forum = forum;
     }
 }

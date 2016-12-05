@@ -9,8 +9,8 @@ import java.sql.SQLException;
  * Created by victor on 23.11.16.
  */
 public class User {
-    public static final String TABLE_NAME = "users";
-    public static final String FOLLOWER_TABLE_NAME = "followers";
+    public static final String TABLE_NAME = "Users";
+    public static final String FOLLOWER_TABLE_NAME = "Followers";//плохо - пересекается с названием поля
     //на случай,если данные нам начнут приходить данные в другом виде не хардкодим названия полей джсона
     private static final String ABOUT_COLUMN = "about";
     private static final String EMAIL_COLUMN = "email";
@@ -21,7 +21,6 @@ public class User {
     private static final String FOLLOWERS_COLUMN = "followers";
     private static final String FOLLOWING_COLUMN = "following";
     private static final String SUBSCRIPTIONS_COLUMN = "subscriptions";
-    private static final String COMMA = ",";
 
 
     private String about;
@@ -67,7 +66,7 @@ public class User {
         }
 
         try{
-            String[] threadsIds = resultSet.getString(SUBSCRIPTIONS_COLUMN).split(",");
+            final String[] threadsIds = resultSet.getString(SUBSCRIPTIONS_COLUMN).split(",");
             listOfSubscriptions = new Integer[threadsIds.length];
             for( Integer i = 0; i < threadsIds.length; i++) {
                 listOfSubscriptions[i] = Integer.parseInt(threadsIds[i]);
@@ -81,7 +80,7 @@ public class User {
     public User(JsonObject object){
         try {
             about = object.get(ABOUT_COLUMN).getAsString();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             about = null; //потому что поле about не обязательно и может быть пустым
         }
         email = object.get(EMAIL_COLUMN).getAsString();
@@ -90,12 +89,12 @@ public class User {
         //логическое выражение, если у пользователя существует нужный параметр и он истинный
         try {
             name = object.get(NAME_COLUMN).getAsString();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             name = null;
         }
         try {
             username = object.get(USERNAME_COLUMN).getAsString();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             username = null;
         } //аналогично, эти поля могут быть пустыми, хотя и декларируются как обязательные
     }

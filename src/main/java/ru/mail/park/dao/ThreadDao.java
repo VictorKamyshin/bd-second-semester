@@ -7,4 +7,6 @@ import ru.mail.park.response.Response;
  */
 public interface ThreadDao extends BaseDao {
     public Response create(String threadCreateJson);
+
+    public Response details(long threadId, String[] related);
 }

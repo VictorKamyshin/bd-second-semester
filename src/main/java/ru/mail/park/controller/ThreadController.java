@@ -1,9 +1,6 @@
 package ru.mail.park.controller;
 
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.mail.park.dao.ThreadDao;
 import ru.mail.park.dao.implementation.ThreadDaoImpl;
 import ru.mail.park.response.ForumApiResponse;
@@ -31,5 +28,11 @@ public class ThreadController extends AbstractController{
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ForumApiResponse create(@RequestBody String body){
         return new ForumApiResponse(threadDao.create(body));
+    }
+
+    @RequestMapping(value = "/details", method = RequestMethod.GET)
+    public ForumApiResponse details(@RequestParam(value = "thread") long threadId,
+                                    @RequestParam(value = "related", required = false) String[] related){
+        return new ForumApiResponse(threadDao.details(threadId,related));
     }
 }

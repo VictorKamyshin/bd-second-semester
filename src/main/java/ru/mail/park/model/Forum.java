@@ -14,7 +14,7 @@ public class Forum {
     private static final String NAME_COLUMN = "name";
     private static final String SHORTNAME_COLUMN = "short_name";
     private static final String USER_EMAIL_COLUMN = "user";
-
+    //важный момент - мы должны называть поля в таблицах так же, как они называются в приходящих к нам джсонах
     private long id;
     private String name;
     private String shortName;

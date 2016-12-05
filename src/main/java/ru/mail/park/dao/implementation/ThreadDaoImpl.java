@@ -8,6 +8,7 @@ import ru.mail.park.response.ResponseStatus;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Arrays;
 
 /**
  * Created by victor on 23.11.16.
@@ -31,8 +32,8 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
                     " date, message, slug, getIsDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             final String query = builder.toString();
             try (PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                ps.setString(1, thread.getUserEmail());
-                ps.setString(2, thread.getForumShortName());
+                ps.setString(1, thread.getUser().toString());
+                ps.setString(2, thread.getForum().toString());
                 ps.setString(3, thread.getTitle());
                 ps.setBoolean(4, thread.getClosed());
                 ps.setString(5,thread.getDate());
@@ -52,5 +53,39 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             return new Response(ResponseStatus.INVALID_REQUEST); //если произошла ошибка при парсе джсона
         }
         return new Response(ResponseStatus.OK, thread); //в ответе будут лишние поля, но тесты от этого не сломаются
+    }
+
+    @Override
+    public Response details(long threadId, String[] related){
+        final Thread thread;
+        try(Connection connection = ds.getConnection()){
+            final StringBuilder threadDetails = new StringBuilder("SELECT * FROM ");
+            threadDetails.append(tableName);
+            threadDetails.append(" WHERE id  = ? ");
+            try (PreparedStatement ps = connection.prepareStatement(threadDetails.toString())) {
+                ps.setLong(1, threadId);
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    resultSet.next();
+                    thread = new Thread(resultSet);
+                } catch (SQLException e) {
+                    return handeSQLException(e);
+                }
+
+                if (related != null) {
+                    if (Arrays.asList(related).contains("user")) {
+                        final String email = thread.getUser().toString();
+                        thread.setUser(new UserDaoImpl(ds).details(email).getObject());
+                    }
+                    if (Arrays.asList(related).contains("forum")) {
+                        final String forumShortName = thread.getForum().toString();
+                        thread.setForum(new ForumDaoImpl(ds).details(forumShortName,null).getObject());
+                    }
+                }
+            }
+        } catch(SQLException e){
+            e.printStackTrace();;
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, thread);
     }
 }
