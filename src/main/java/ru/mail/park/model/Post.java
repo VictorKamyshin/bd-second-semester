@@ -2,6 +2,9 @@ package ru.mail.park.model;
 
 import com.google.gson.JsonObject;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
  * Created by victor on 23.11.16.
  */
@@ -38,12 +41,11 @@ public class Post {
     private Long parentId;
     private long points;
     private Object thread; //тоже объект
-    private Object userEmail;// и это тоже объект
+    private Object user;// и это тоже объект
     private String path;
 
     public Post(JsonObject object) {
         id = object.has(ID_COLUMN) ? object.get(ID_COLUMN).getAsInt() : 0;
-
         try{ //опциональные параметры, т.е. их может не быть в пришедшем джсоне
             parentId = object.get(PARENT_COLUMN).getAsLong();
         } catch(Exception e){
@@ -58,8 +60,24 @@ public class Post {
         date = object.get(DATE_COLUMN).getAsString();
         thread = object.get(THREAD_COLUMN).getAsLong();
         message = object.get(MESSAGE_COLUMN).getAsString();
-        userEmail = object.get(USER_COLUMN).getAsString();
+        user = object.get(USER_COLUMN).getAsString();
         forum = object.get(FORUM_COLUMN).getAsString();
+    }
+
+    public Post(ResultSet resultSet) throws SQLException{
+        id = resultSet.getLong(ID_COLUMN);
+        parentId = resultSet.getLong(PARENT_COLUMN);
+        isApproved = resultSet.getBoolean(ISAPPROVED_COLUMN);
+        isDeleted = resultSet.getBoolean(ISDELETED_COLUMN);
+        isEdited = resultSet.getBoolean(ISEDITED_COLUMN);
+        isHighlighted = resultSet.getBoolean(ISHIGHLIGHTED_COLUMN);
+        isSpam = resultSet.getBoolean(ISSPAM_COLUMN);
+        date = resultSet.getString(DATE_COLUMN);
+        thread = resultSet.getString(THREAD_COLUMN);
+        message = resultSet.getString(MESSAGE_COLUMN);
+        user = resultSet.getString(USER_COLUMN);
+        forum = resultSet.getString(FORUM_COLUMN);
+
     }
 
 
@@ -127,8 +145,8 @@ public class Post {
         return thread;
     }
 
-    public Object getUserEmail() {
-        return userEmail;
+    public Object getUser() {
+        return user;
     }
 
     public String getPath() {
@@ -207,7 +225,7 @@ public class Post {
         this.thread = thread;
     }
 
-    public void setUserEmail(Object userEmail) {
-        this.userEmail = userEmail;
+    public void setUser(Object user) {
+        this.user = user;
     }
 }

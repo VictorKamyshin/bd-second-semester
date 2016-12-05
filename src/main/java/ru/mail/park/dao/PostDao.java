@@ -7,4 +7,6 @@ import ru.mail.park.response.Response;
  */
 public interface PostDao extends BaseDao {
     public Response create(String postCreateJson);
+
+    public Response details(long postId, String[] related);
 }

@@ -8,6 +8,7 @@ import ru.mail.park.response.ResponseStatus;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Arrays;
 
 /**
  * Created by victor on 23.11.16.
@@ -76,7 +77,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 ps.setString(8, post.getMessage());
                 ps.setObject(9, post.getParentId());
                 ps.setLong(10, Long.parseLong(post.getThread().toString()));
-                ps.setString(11, post.getUserEmail().toString());
+                ps.setString(11, post.getUser().toString());
                 ps.setString(12, postPath);
                 ps.executeUpdate();
                 try (ResultSet resultSet = ps.getGeneratedKeys()) {
@@ -113,6 +114,44 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
         } catch(SQLException e){
             e.printStackTrace();
             return new Response(ResponseStatus.INVALID_REQUEST); //если произошла ошибка при парсе джсона
+        }
+        return new Response(ResponseStatus.OK, post);
+    }
+
+    @Override
+    public Response details(long postId, String[] related){
+        final Post post;
+        try(Connection connection = ds.getConnection()){
+            final StringBuilder postDetails = new StringBuilder("SELECT * FROM ");
+            postDetails.append(tableName);
+            postDetails.append(" WHERE id  = ? ");
+            try (PreparedStatement ps = connection.prepareStatement(postDetails.toString())) {
+                ps.setLong(1, postId);
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    resultSet.next();
+                    post = new Post(resultSet);
+                } catch (SQLException e) {
+                    return handeSQLException(e);
+                }
+
+                if (related != null) {
+                    if (Arrays.asList(related).contains("user")) {
+                        final String email = post.getUser().toString();
+                        post.setUser(new UserDaoImpl(ds).details(email).getObject());
+                    }
+                    if (Arrays.asList(related).contains("forum")) {
+                        final String forumShortName = post.getForum().toString();
+                        post.setForum(new ForumDaoImpl(ds).details(forumShortName,null).getObject());
+                    }
+                    if (Arrays.asList(related).contains("thread")) {
+                        final Long threadId = Long.parseLong(post.getThread().toString());
+                        post.setForum(new ThreadDaoImpl(ds).details(threadId, null).getObject());
+                    }
+                }
+            }
+        } catch(SQLException e){
+            e.printStackTrace();;
+            return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, post);
     }

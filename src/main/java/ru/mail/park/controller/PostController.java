@@ -1,9 +1,6 @@
 package ru.mail.park.controller;
 
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.mail.park.dao.PostDao;
 import ru.mail.park.dao.implementation.PostDaoImpl;
 import ru.mail.park.response.ForumApiResponse;
@@ -32,4 +29,11 @@ public class PostController extends  AbstractController{
     public ForumApiResponse create(@RequestBody String body) {
         return new ForumApiResponse(postDao.create(body));
     }
+
+    @RequestMapping(value = "/details", method = RequestMethod.GET)
+    public ForumApiResponse details(@RequestParam(value = "post") long postId,
+                                    String[] related) {
+        return new ForumApiResponse(postDao.details(postId,related));
+    }
+
 }

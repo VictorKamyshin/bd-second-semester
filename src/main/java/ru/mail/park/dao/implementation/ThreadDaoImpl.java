@@ -83,7 +83,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
                 }
             }
         } catch(SQLException e){
-            e.printStackTrace();;
+            e.printStackTrace();
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, thread);
