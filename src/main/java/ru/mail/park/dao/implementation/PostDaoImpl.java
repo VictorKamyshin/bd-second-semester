@@ -193,7 +193,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
 
     @Override
     public Response restore(String postRestoreJson){
-        try(Connection connection = ds.getConnection()){
+        try(Connection connection = ds.getConnection()) {
             final Long postId = new JsonParser().parse(postRestoreJson).getAsJsonObject().get("post").getAsLong();
             final StringBuilder postRestoreQuery = new StringBuilder("UPDATE ");
             postRestoreQuery.append(tableName);
@@ -205,7 +205,6 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 e.printStackTrace();
                 return new Response(ResponseStatus.NOT_FOUND);
             }
-
 
             final String updateThreadsQuery = "UPDATE threads SET posts = posts + 1 WHERE id=?";
             try (PreparedStatement ps = connection.prepareStatement(updateThreadsQuery)) {

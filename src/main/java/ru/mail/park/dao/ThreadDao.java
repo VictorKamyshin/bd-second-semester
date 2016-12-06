@@ -13,4 +13,6 @@ public interface ThreadDao extends BaseDao {
     public Response close(String threadCloseJson);
 
     public Response open(String threadOpenJson);
+
+    public Response remove(String threadRemoveJson);
 }

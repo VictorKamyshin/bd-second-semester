@@ -18,6 +18,8 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
 
     private String subscriptionsName;
 
+    private String postTableName;
+
     public ThreadDaoImpl(DataSource dataSource) {
         this.tableName = Thread.TABLE_NAME;
         this.subscriptionsName = Thread.SUBSCRIPTION_TABLE_NAME;
@@ -131,6 +133,37 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         }
         //может, отдавать прямо то, что нам пришло?
         return new Response(ResponseStatus.OK, new Gson().fromJson(threadCloseJson, Object.class));
+    }
+
+    @Override
+    public Response remove(String threadRemoveJson){
+        //надо отметить тред как удаленный, а так же - все посты в нем
+        try(Connection connection = ds.getConnection()){
+            final Long threadId = new JsonParser().parse(threadRemoveJson).getAsJsonObject().get("thread").getAsLong();
+            final StringBuilder threadRemoveQuery = new StringBuilder("UPDATE ");
+            threadRemoveQuery.append(tableName);
+            threadRemoveQuery.append(" SET isDeleted = 1 WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(threadRemoveQuery.toString())) {
+                ps.setLong(1, threadId);
+                ps.execute();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            } //отметили тред как удаленный
+            //теперь идем отмечать как удаленные все посты из этого треда
+            final StringBuilder postsRemoveQuery = new StringBuilder("UPDATE ");
+            postsRemoveQuery.append(postTableName);
+            postsRemoveQuery.append(" SET isDeleted = 1 WHRER thread = ?");
+            try (PreparedStatement ps = connection.prepareStatement(postsRemoveQuery.toString())) {
+                ps.setLong(1, threadId);
+                ps.execute();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            } //удолил
+        } catch(SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, new Gson().fromJson(threadRemoveJson, Object.class));
     }
 
 }

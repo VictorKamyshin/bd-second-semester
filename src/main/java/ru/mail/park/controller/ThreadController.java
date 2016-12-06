@@ -36,11 +36,13 @@ public class ThreadController extends AbstractController{
         return new ForumApiResponse(threadDao.details(threadId,related));
     }
 
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    @RequestMapping(value = "/close", method = RequestMethod.POST)
     public ForumApiResponse close(@RequestBody String body) { return new ForumApiResponse(threadDao.close(body)); }
 
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    @RequestMapping(value = "/open", method = RequestMethod.POST)
     public ForumApiResponse open(@RequestBody String body) { return new ForumApiResponse(threadDao.open(body)); }
 
+    @RequestMapping(value = "/remove", method = RequestMethod.POST)
+    public ForumApiResponse remove(@RequestBody String body) { return new ForumApiResponse(threadDao.remove(body)); }
 
 }
