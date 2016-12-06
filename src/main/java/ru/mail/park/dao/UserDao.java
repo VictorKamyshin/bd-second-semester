@@ -13,4 +13,6 @@ public interface UserDao extends BaseDao {
     public Response unfollow(String userUnfollowJson);
 
     public Response details(String userEmail);
+
+    public Response updateProfile(String updateProfileJson);
 }

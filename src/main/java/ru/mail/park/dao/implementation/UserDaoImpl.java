@@ -101,11 +101,11 @@ public class UserDaoImpl extends BaseDaoImpl implements UserDao {
         final User user;
         try (Connection connection = ds.getConnection()) {
             user = new User(new JsonParser().parse(userCreateJson).getAsJsonObject());
-            final StringBuilder builder = new StringBuilder("INSERT INTO ");
-            builder.append(tableName);
-            builder.append("(about, email, isAnonymous, name, username) VALUES (?, ?, ?, ?, ?)");
-            final String query = builder.toString();
-            try (PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            final StringBuilder createUserQuery = new StringBuilder("INSERT INTO ");
+            createUserQuery.append(tableName);
+            createUserQuery.append("(about, email, isAnonymous, name, username) VALUES (?, ?, ?, ?, ?)");
+            try (PreparedStatement ps = connection.prepareStatement(createUserQuery.toString(),
+                    Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, user.getAbout()); //второй параметр говорит базе, чтобы она вернула
                 ps.setString(2, user.getEmail()); //айдишник сгенерированного юзера
                 ps.setBoolean(3, user.getAnonymous());
@@ -125,5 +125,31 @@ public class UserDaoImpl extends BaseDaoImpl implements UserDao {
             return new Response(ResponseStatus.INVALID_REQUEST); //если произошла ошибка при парсе джсона
         }
         return new Response(ResponseStatus.OK, user); //в ответе будут лишние поля, но тесты от этого не сломаются
+    }
+
+    @Override
+    public Response updateProfile(String profileUpdateJson ) {
+        final String email;
+        try (Connection connection = ds.getConnection()) {
+            JsonObject jsonObject = new JsonParser().parse(profileUpdateJson).getAsJsonObject();
+            email = jsonObject.get("email").getAsString();
+            final String name = jsonObject.get("name").getAsString();
+            final String about = jsonObject.get("about").getAsString();
+            final StringBuilder updatePrifileQuery = new StringBuilder("UPDATE ");
+            updatePrifileQuery.append(tableName);
+            updatePrifileQuery.append(" SET about = ?, name = ? WHERE email = ?");
+            try (PreparedStatement ps = connection.prepareStatement(updatePrifileQuery.toString())) {
+                ps.setString(1, about);
+                ps.setString(2, name);
+                ps.setString(3, email);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return details(email);
     }
 }

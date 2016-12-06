@@ -44,4 +44,9 @@ public class UserController extends AbstractController {
     public ForumApiResponse unfollow(@RequestBody String body) {
         return new ForumApiResponse(userDao.unfollow(body));
     }
+
+    @RequestMapping(value = "/updateProfile", method = RequestMethod.POST)
+    public ForumApiResponse updateProfile(@RequestBody String body) {
+        return new ForumApiResponse(userDao.updateProfile(body));
+    }
 }
