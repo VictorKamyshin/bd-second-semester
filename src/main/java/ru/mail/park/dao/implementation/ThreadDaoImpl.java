@@ -166,4 +166,34 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         return new Response(ResponseStatus.OK, new Gson().fromJson(threadRemoveJson, Object.class));
     }
 
+    @Override
+    public Response restore(String threadRestoreJson){
+        try(Connection connection = ds.getConnection()){
+            final Long threadId = new JsonParser().parse(threadRestoreJson).getAsJsonObject().get("thread").getAsLong();
+            final StringBuilder threadRestoreQuery = new StringBuilder("UPDATE ");
+            threadRestoreQuery.append(tableName);
+            threadRestoreQuery.append(" SET isDeleted = 1 WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(threadRestoreQuery.toString())) {
+                ps.setLong(1, threadId);
+                ps.execute();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            } //отметили тред как неудаленный
+            //теперь идем восстанавливать все посты из этого треда
+            final StringBuilder postsRestoreQuery = new StringBuilder("UPDATE ");
+            postsRestoreQuery.append(postTableName);
+            postsRestoreQuery.append(" SET isDeleted = 1 WHRER thread = ?");
+            try (PreparedStatement ps = connection.prepareStatement(postsRestoreQuery.toString())) {
+                ps.setLong(1, threadId);
+                ps.execute();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            } //восстановил
+        } catch(SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, new Gson().fromJson(threadRestoreJson, Object.class));
+    }
+
 }
