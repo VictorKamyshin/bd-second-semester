@@ -35,4 +35,9 @@ public class ThreadController extends AbstractController{
                                     @RequestParam(value = "related", required = false) String[] related){
         return new ForumApiResponse(threadDao.details(threadId,related));
     }
+
+    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    public ForumApiResponse close(@RequestBody String body) { return new ForumApiResponse(threadDao.close(body)); }
+
+    
 }

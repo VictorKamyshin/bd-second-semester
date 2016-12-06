@@ -9,4 +9,6 @@ public interface ThreadDao extends BaseDao {
     public Response create(String threadCreateJson);
 
     public Response details(long threadId, String[] related);
+
+    public Response close(long threadId, )
 }

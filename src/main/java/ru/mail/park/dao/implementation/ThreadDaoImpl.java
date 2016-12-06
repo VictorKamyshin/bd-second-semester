@@ -1,5 +1,6 @@
 package ru.mail.park.dao.implementation;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import ru.mail.park.dao.ThreadDao;
 import ru.mail.park.model.Thread;
@@ -14,7 +15,9 @@ import java.util.Arrays;
  * Created by victor on 23.11.16.
  */
 public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
+
     private String subscriptionsName;
+
     public ThreadDaoImpl(DataSource dataSource) {
         this.tableName = Thread.TABLE_NAME;
         this.subscriptionsName = Thread.SUBSCRIPTION_TABLE_NAME;
@@ -26,12 +29,11 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         final Thread thread;
         try (Connection connection = ds.getConnection()) {
             thread = new Thread(new JsonParser().parse(threadCreateJson).getAsJsonObject());
-            final StringBuilder builder = new StringBuilder("INSERT INTO ");
-            builder.append(tableName);
-            builder.append("(user_email, forum_short_name, title, isClosed," +
+            final StringBuilder threadCreate = new StringBuilder("INSERT INTO ");
+            threadCreate.append(tableName);
+            threadCreate.append("(user_email, forum_short_name, title, isClosed," +
                     " date, message, slug, getIsDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            final String query = builder.toString();
-            try (PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps = connection.prepareStatement(threadCreate.toString(), Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, thread.getUser().toString());
                 ps.setString(2, thread.getForum().toString());
                 ps.setString(3, thread.getTitle());
@@ -88,4 +90,26 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         }
         return new Response(ResponseStatus.OK, thread);
     }
+
+    @Override
+    public Response close(String threadCloseJson){
+        try(Connection connection = ds.getConnection()){
+            final Integer threadId = new JsonParser().parse(threadCloseJson).getAsJsonObject().get("thread").getAsInt();;
+            final StringBuilder threadCloseQuery = new StringBuilder("UPDATE ");
+            threadCloseQuery.append(tableName);
+            threadCloseQuery.append(" SET isClosed = 1 WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(threadCloseQuery.toString())) {
+                ps.setLong(1, threadId);
+                ps.execute();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        }  catch(SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        //может, отдавать прямо то, что нам пришло?
+        return new Response(ResponseStatus.OK, new Gson().fromJson(threadCloseJson, Object.class));
+    }
+
 }
