@@ -94,7 +94,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
     @Override
     public Response close(String threadCloseJson){
         try(Connection connection = ds.getConnection()){
-            final Integer threadId = new JsonParser().parse(threadCloseJson).getAsJsonObject().get("thread").getAsInt();;
+            final Integer threadId = new JsonParser().parse(threadCloseJson).getAsJsonObject().get("thread").getAsInt();
             final StringBuilder threadCloseQuery = new StringBuilder("UPDATE ");
             threadCloseQuery.append(tableName);
             threadCloseQuery.append(" SET isClosed = 1 WHERE id = ?");
@@ -104,7 +104,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             } catch (SQLException e) {
                 return handeSQLException(e);
             }
-        }  catch(SQLException e){
+        } catch(SQLException e){
             e.printStackTrace();
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
@@ -115,7 +115,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
     @Override
     public Response open(String threadCloseJson){
         try(Connection connection = ds.getConnection()){
-            final Integer threadId = new JsonParser().parse(threadCloseJson).getAsJsonObject().get("thread").getAsInt();;
+            final Long threadId = new JsonParser().parse(threadCloseJson).getAsJsonObject().get("thread").getAsLong();
             final StringBuilder threadCloseQuery = new StringBuilder("UPDATE ");
             threadCloseQuery.append(tableName);
             threadCloseQuery.append(" SET isClosed = 0 WHERE id = ?");

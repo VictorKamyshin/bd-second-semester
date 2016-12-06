@@ -36,4 +36,7 @@ public class PostController extends  AbstractController{
         return new ForumApiResponse(postDao.details(postId,related));
     }
 
+    @RequestMapping(value = "/remove", method = RequestMethod.POST)
+    public ForumApiResponse remove(@RequestBody String body) { return new ForumApiResponse(postDao.remove(body)); }
+
 }

@@ -1,5 +1,6 @@
 package ru.mail.park.dao.implementation;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import ru.mail.park.dao.PostDao;
 import ru.mail.park.model.Post;
@@ -150,10 +151,54 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 }
             }
         } catch(SQLException e){
-            e.printStackTrace();;
+            e.printStackTrace();
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, post);
+    }
+
+    @Override
+    public Response remove(String postRemoveJson){
+        try(Connection connection = ds.getConnection()){
+            final Long postId = new JsonParser().parse(postRemoveJson).getAsJsonObject().get("post").getAsLong();
+            final StringBuilder postRemoveQuery = new StringBuilder("UPDATE ");
+            postRemoveQuery.append(tableName);
+            postRemoveQuery.append(" SET isDeleted = 1 WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(postRemoveQuery.toString())) {
+                ps.setLong(1, postId);
+                ps.execute(); //окей, пост пометили как удаленный - но еще надо сделать поправку данные, которые храняться у треда
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+
+            //нужно откуда-то добыть адйи поста
+            final StringBuilder getThreadIdByPost = new StringBuilder("SELECT thread FROM ");
+            getThreadIdByPost.append(tableName);
+            getThreadIdByPost.append(" WHERE id = ?");
+            Long threadId;
+            try (PreparedStatement ps = connection.prepareStatement(postRemoveQuery.toString())) {
+                ps.setLong(1,postId);
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    resultSet.next();
+                    threadId = resultSet.getLong(1);
+                }
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            } //добыл - приверяй.
+
+            final String updateThreadsQuery = "UPDATE threads SET posts = posts + 1 WHERE id=?";
+            try (PreparedStatement ps = connection.prepareStatement(updateThreadsQuery)) {
+                ps.setLong(1, threadId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return new Response(ResponseStatus.NOT_FOUND);
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, new Gson().fromJson(postRemoveJson, Object.class));
     }
 
 }

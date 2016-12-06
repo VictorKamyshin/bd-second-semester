@@ -9,4 +9,6 @@ public interface PostDao extends BaseDao {
     public Response create(String postCreateJson);
 
     public Response details(long postId, String[] related);
+
+    public Response remove(String postRemoveJson);
 }
