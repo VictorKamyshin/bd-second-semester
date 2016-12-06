@@ -171,23 +171,13 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 return handeSQLException(e);
             }
 
-            //нужно откуда-то добыть адйи поста
-            final StringBuilder getThreadIdByPost = new StringBuilder("SELECT thread FROM ");
-            getThreadIdByPost.append(tableName);
-            getThreadIdByPost.append(" WHERE id = ?");
-            Long threadId;
-            try (PreparedStatement ps = connection.prepareStatement(postRemoveQuery.toString())) {
-                ps.setLong(1,postId);
-                try (ResultSet resultSet = ps.executeQuery()) {
-                    resultSet.next();
-                    threadId = resultSet.getLong(1);
-                }
-            } catch (SQLException e) {
-                return handeSQLException(e);
-            } //добыл - приверяй.
-
             final String updateThreadsQuery = "UPDATE threads SET posts = posts + 1 WHERE id=?";
             try (PreparedStatement ps = connection.prepareStatement(updateThreadsQuery)) {
+                //нужно откуда-то добыть адйи поста
+                final Long threadId = getThreadIdByPostId(postId); //добыл - приверяй.
+                if(threadId==null){
+                    return new Response(ResponseStatus.NOT_FOUND);
+                }
                 ps.setLong(1, threadId);
                 ps.executeUpdate();
             } catch (SQLException e) {
@@ -199,6 +189,65 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, new Gson().fromJson(postRemoveJson, Object.class));
+    }
+
+    @Override
+    public Response restore(String postRestoreJson){
+        try(Connection connection = ds.getConnection()){
+            final Long postId = new JsonParser().parse(postRestoreJson).getAsJsonObject().get("post").getAsLong();
+            final StringBuilder postRestoreQuery = new StringBuilder("UPDATE ");
+            postRestoreQuery.append(tableName);
+            postRestoreQuery.append(" SET isDeleted = 0 WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(postRestoreQuery.toString())) {
+                ps.setLong(1, postId);
+                ps.execute(); //окей, пост пометили как удаленный - но еще надо сделать поправку данные, которые храняться у треда
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return new Response(ResponseStatus.NOT_FOUND);
+            }
+
+
+            final String updateThreadsQuery = "UPDATE threads SET posts = posts + 1 WHERE id=?";
+            try (PreparedStatement ps = connection.prepareStatement(updateThreadsQuery)) {
+                //нужно откуда-то добыть адйи поста
+                final Long threadId = getThreadIdByPostId(postId); //добыл - приверяй.
+                if(threadId==null){
+                    return new Response(ResponseStatus.NOT_FOUND);
+                }
+                ps.setLong(1, threadId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return new Response(ResponseStatus.NOT_FOUND);
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, new Gson().fromJson(postRestoreJson, Object.class));
+    }
+
+    private Long getThreadIdByPostId(Long postId){
+        final Long threadId;
+        try(Connection connection = ds.getConnection()){
+            final StringBuilder getThreadIdByPost = new StringBuilder("SELECT thread FROM ");
+            getThreadIdByPost.append(tableName);
+            getThreadIdByPost.append(" WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(getThreadIdByPost.toString())) {
+                ps.setLong(1,postId);
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    resultSet.next();
+                    threadId = resultSet.getLong(1);
+                }
+            } catch(SQLException e) {
+                e.printStackTrace();
+                return null;
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return threadId;
     }
 
 }

@@ -11,4 +11,6 @@ public interface PostDao extends BaseDao {
     public Response details(long postId, String[] related);
 
     public Response remove(String postRemoveJson);
+
+    public Response restore(String postRestoreJson);
 }
