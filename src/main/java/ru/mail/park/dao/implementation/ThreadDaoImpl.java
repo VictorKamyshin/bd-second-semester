@@ -112,4 +112,25 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         return new Response(ResponseStatus.OK, new Gson().fromJson(threadCloseJson, Object.class));
     }
 
+    @Override
+    public Response open(String threadCloseJson){
+        try(Connection connection = ds.getConnection()){
+            final Integer threadId = new JsonParser().parse(threadCloseJson).getAsJsonObject().get("thread").getAsInt();;
+            final StringBuilder threadCloseQuery = new StringBuilder("UPDATE ");
+            threadCloseQuery.append(tableName);
+            threadCloseQuery.append(" SET isClosed = 0 WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(threadCloseQuery.toString())) {
+                ps.setLong(1, threadId);
+                ps.execute();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        }  catch(SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        //может, отдавать прямо то, что нам пришло?
+        return new Response(ResponseStatus.OK, new Gson().fromJson(threadCloseJson, Object.class));
+    }
+
 }
