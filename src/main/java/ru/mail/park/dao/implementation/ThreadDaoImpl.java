@@ -233,6 +233,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             final Integer threadVote = jsonObject.get("vote").getAsInt();
             final StringBuilder threadVoteQuery = new StringBuilder("UPDATE ");
             threadVoteQuery.append(tableName);
+            threadVoteQuery.append(" SET");
             if(threadVote>0){
                 threadVoteQuery.append(" likes = likes + 1, points = points + 1");
             } else {
@@ -240,8 +241,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             }
             threadVoteQuery.append(" WHERE id = ?");
             try (PreparedStatement ps = connection.prepareStatement(threadVoteQuery.toString())) {
-                ps.setInt(1, threadVote);
-                ps.setLong(2,threadId);
+                ps.setLong(1,threadId);
                 ps.executeUpdate();
             } catch (SQLException e) {
                 return handeSQLException(e);

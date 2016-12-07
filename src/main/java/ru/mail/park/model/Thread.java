@@ -10,7 +10,7 @@ import java.sql.SQLException;
  */
 public class Thread {
     public static final String TABLE_NAME = "Threads";
-    public static final String SUBSCRIPTION_TABLE_NAME = "Subscriptions";
+    public static final String SUBSCRIPTION_TABLE_NAME = "Subscribe";
 
     private static final String ID_COLUMN = "id";
     private static final String USER_EMAIL_COLUMN = "user";
@@ -21,6 +21,9 @@ public class Thread {
     private static final String MESSAGE_COLUMN = "message";
     private static final String SLUG_COLUMN = "slug";
     private static final String ISDELETED_COLUMN = "isDeleted";
+    public static final String LIKES_COLUMN = "likes";
+    public static final String DISLIKES_COLUMN = "dislikes";
+    public static final String POINTS_COLUMN = "points";
 
     private long id;
     private Object user;
@@ -31,6 +34,9 @@ public class Thread {
     private String message;
     private String slug;
     private Boolean isDeleted;
+    private Integer likes;
+    private Integer dislikes;
+    private Integer points;
 
     public Thread(JsonObject object) {
         id = object.has(ID_COLUMN) ? object.get(ID_COLUMN).getAsInt() : 0;
@@ -54,6 +60,10 @@ public class Thread {
         message = resultSet.getString(MESSAGE_COLUMN);
         slug = resultSet.getString(SLUG_COLUMN);
         isDeleted = resultSet.getBoolean(ISDELETED_COLUMN);
+        likes = resultSet.getInt(LIKES_COLUMN);
+        dislikes = resultSet.getInt(DISLIKES_COLUMN);
+        points = resultSet.getInt(POINTS_COLUMN);
+
     }
 
     public void setId(long id) {
@@ -90,6 +100,18 @@ public class Thread {
 
     public Boolean getIsDeleted() {
         return isDeleted;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public Integer getDislikes() {
+        return dislikes;
+    }
+
+    public Integer getPoints() {
+        return points;
     }
 
     public void setUser(Object user) {

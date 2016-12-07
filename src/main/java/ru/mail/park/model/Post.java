@@ -10,7 +10,7 @@ import java.sql.SQLException;
  */
 public class Post {
     public static final String TABLE_NAME = "Posts";
-    public static final String DATE_COLUMN = "date"; //так-то это нифига не столбцы, а поля джсона
+    public static final String DATE_COLUMN = "date";
     public static final String DISLIKES_COLUMN = "dislikes";
     public static final String FORUM_COLUMN = "forum";
     public static final String ID_COLUMN = "id";
@@ -25,7 +25,7 @@ public class Post {
     public static final String POINTS_COLUMN = "points";
     public static final String THREAD_COLUMN = "thread";
     public static final String USER_COLUMN = "user";
-    public static final String PATCH_COLUMN = "path";
+    public static final String PATH_COLUMN = "path";
 
     private String date;
     private long dislikes;
@@ -77,6 +77,10 @@ public class Post {
         message = resultSet.getString(MESSAGE_COLUMN);
         user = resultSet.getString(USER_COLUMN);
         forum = resultSet.getString(FORUM_COLUMN);
+        likes = resultSet.getInt(LIKES_COLUMN);
+        dislikes = resultSet.getInt(DISLIKES_COLUMN);
+        points = resultSet.getInt(POINTS_COLUMN);
+        path = resultSet.getString(PATH_COLUMN);
 
     }
 
