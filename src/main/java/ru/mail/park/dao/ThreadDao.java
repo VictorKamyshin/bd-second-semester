@@ -21,4 +21,8 @@ public interface ThreadDao extends BaseDao {
     public Response update(String threadUpdateJson);
 
     public Response vote(String threadVoteJson);
+
+    public Response subscribe(String subscribeJson);
+
+    public Response unsubscribe(String unsubscribeJson);
 }

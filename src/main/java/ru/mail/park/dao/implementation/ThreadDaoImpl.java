@@ -203,7 +203,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
     public Response update(String threadUpdateJson){
         final Long threadId;
         try (Connection connection = ds.getConnection()) {
-            JsonObject jsonObject = new JsonParser().parse(threadUpdateJson).getAsJsonObject();
+            final JsonObject jsonObject = new JsonParser().parse(threadUpdateJson).getAsJsonObject();
             threadId = jsonObject.get("thread").getAsLong();
             final String newMessage = jsonObject.get("message").getAsString();
             final String newSlug = jsonObject.get("slug").getAsString();
@@ -228,7 +228,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
     public Response vote(String threadVoteJson) {
         final Long threadId;
         try (Connection connection = ds.getConnection()) {
-            JsonObject jsonObject = new JsonParser().parse(threadVoteJson).getAsJsonObject();
+            final JsonObject jsonObject = new JsonParser().parse(threadVoteJson).getAsJsonObject();
             threadId = jsonObject.get("thread").getAsLong();
             final Integer threadVote = jsonObject.get("vote").getAsInt();
             final StringBuilder threadVoteQuery = new StringBuilder("UPDATE ");
@@ -251,6 +251,51 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return details(threadId, null);
+    }
+
+    @Override
+    public Response subscribe(String subscribeJson){
+        try (Connection connection = ds.getConnection()) {
+            final JsonObject jsonObject = new JsonParser().parse(subscribeJson).getAsJsonObject();
+            final String subscriberEmail = jsonObject.get("user").getAsString();
+            final Long threadId = jsonObject.get("thread").getAsLong();
+            final StringBuilder subscribeQuery = new StringBuilder("INSERT INTO ");
+            subscribeQuery.append(subscriptionsName);
+            subscribeQuery.append("(user, thread) VALUES (?,?)");
+            try (PreparedStatement ps = connection.prepareStatement(subscribeQuery.toString())) {
+                ps.setString(1,subscriberEmail);
+                ps.setLong(2,threadId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+            } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, new Gson().fromJson(subscribeJson, Object.class));
+    }
+
+    public Response unsubscribe(String unsubscribeJson){
+        try (Connection connection = ds.getConnection()) {
+            final JsonObject jsonObject = new JsonParser().parse(unsubscribeJson).getAsJsonObject();
+            final String subscriberEmail = jsonObject.get("user").getAsString();
+            final Long threadId = jsonObject.get("thread").getAsLong();
+            final StringBuilder unsubscribeQuery = new StringBuilder("DELETE FROM ");
+            unsubscribeQuery.append(subscriptionsName);
+            unsubscribeQuery.append("WHERE user = ? AND thread = ?");
+            try (PreparedStatement ps = connection.prepareStatement(unsubscribeQuery.toString())) {
+                ps.setString(1,subscriberEmail);
+                ps.setLong(2,threadId);
+                ps.execute();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, new Gson().fromJson(unsubscribeJson, Object.class));
     }
 
 }

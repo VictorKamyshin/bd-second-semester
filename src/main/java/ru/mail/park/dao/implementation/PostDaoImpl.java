@@ -231,7 +231,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
     public Response update(String postUpdateJson){
         final Long postId;
         try (Connection connection = ds.getConnection()) {
-            JsonObject jsonObject = new JsonParser().parse(postUpdateJson).getAsJsonObject();
+            final JsonObject jsonObject = new JsonParser().parse(postUpdateJson).getAsJsonObject();
             postId = jsonObject.get("post").getAsLong();
             final String newMessage = jsonObject.get("message").getAsString();
             final StringBuilder updatePostQuery = new StringBuilder("UPDATE ");
@@ -256,7 +256,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
     public Response vote(String postVoteJson){
         final Long postId;
         try (Connection connection = ds.getConnection()) {
-            JsonObject jsonObject = new JsonParser().parse(postVoteJson).getAsJsonObject();
+            final JsonObject jsonObject = new JsonParser().parse(postVoteJson).getAsJsonObject();
             postId = jsonObject.get("post").getAsLong();
             final Integer postVote = jsonObject.get("vote").getAsInt();
             final StringBuilder postVoteQuery = new StringBuilder("UPDATE ");
