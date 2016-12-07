@@ -251,6 +251,35 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
         return details(postId, null);
     }
 
+    public Response vote(String postVoteJson){
+        final Long postId;
+        try (Connection connection = ds.getConnection()) {
+            JsonObject jsonObject = new JsonParser().parse(postVoteJson).getAsJsonObject();
+            postId = jsonObject.get("post").getAsLong();
+            final Integer postVote = jsonObject.get("vote").getAsInt();
+            final StringBuilder postVoteQuery = new StringBuilder("UPDATE ");
+            postVoteQuery.append(tableName);
+            postVoteQuery.append(" SET");
+            if(postVote>0){
+                postVoteQuery.append(" likes = likes + 1, points = points + 1");
+            } else {
+                postVoteQuery.append(" dislikes = dislikes + 1, points = points - 1");
+            }
+            postVoteQuery.append(" WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(postVoteQuery.toString())) {
+                ps.setLong(1,postId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return details(postId, null);
+
+    }
+
     private Long getThreadIdByPostId(Long postId){
         final Long threadId;
         try(Connection connection = ds.getConnection()){

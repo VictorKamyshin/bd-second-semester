@@ -15,4 +15,6 @@ public interface PostDao extends BaseDao {
     public Response restore(String postRestoreJson);
 
     public Response update(String postUpdateJson);
+
+    public Response vote(String postVoteJson);
 }

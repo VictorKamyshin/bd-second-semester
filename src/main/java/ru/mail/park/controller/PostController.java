@@ -45,4 +45,7 @@ public class PostController extends  AbstractController{
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ForumApiResponse update(@RequestBody String body) { return new ForumApiResponse(postDao.update(body)); }
 
+    @RequestMapping(value = "/vote", method = RequestMethod.POST)
+    public ForumApiResponse vote(@RequestBody String body) { return new ForumApiResponse(postDao.vote(body)); }
+
 }
