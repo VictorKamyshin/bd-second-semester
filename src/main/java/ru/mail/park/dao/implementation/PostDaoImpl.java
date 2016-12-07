@@ -227,6 +227,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
         return new Response(ResponseStatus.OK, new Gson().fromJson(postRestoreJson, Object.class));
     }
 
+    @Override
     public Response update(String postUpdateJson){
         final Long postId;
         try (Connection connection = ds.getConnection()) {
@@ -251,6 +252,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
         return details(postId, null);
     }
 
+    @Override
     public Response vote(String postVoteJson){
         final Long postId;
         try (Connection connection = ds.getConnection()) {

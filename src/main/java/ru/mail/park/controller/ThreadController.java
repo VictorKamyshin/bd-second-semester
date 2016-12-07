@@ -48,4 +48,7 @@ public class ThreadController extends AbstractController{
     @RequestMapping(value = "/restore", method = RequestMethod.POST)
     public ForumApiResponse retsore(@RequestBody String body) { return new ForumApiResponse(threadDao.restore(body)); }
 
+    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    public ForumApiResponse update(@RequestBody String body) { return new ForumApiResponse(threadDao.update(body)); }
+
 }

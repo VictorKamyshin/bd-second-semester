@@ -1,6 +1,7 @@
 package ru.mail.park.dao.implementation;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ru.mail.park.dao.ThreadDao;
 import ru.mail.park.model.Post;
@@ -196,6 +197,31 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, new Gson().fromJson(threadRestoreJson, Object.class));
+    }
+
+    public Response update(String threadUpdateJson){
+        final Long threadId;
+        try (Connection connection = ds.getConnection()) {
+            JsonObject jsonObject = new JsonParser().parse(threadUpdateJson).getAsJsonObject();
+            threadId = jsonObject.get("thread").getAsLong();
+            final String newMessage = jsonObject.get("message").getAsString();
+            final String newSlug = jsonObject.get("slug").getAsString();
+            final StringBuilder updateThreadQuery = new StringBuilder("UPDATE ");
+            updateThreadQuery.append(tableName);
+            updateThreadQuery.append(" SET message = ?, slug = ? WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(updateThreadQuery.toString())) {
+                ps.setString(1, newMessage);
+                ps.setString(2,newSlug);
+                ps.setLong(3,threadId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return details(threadId, null);
     }
 
 }
