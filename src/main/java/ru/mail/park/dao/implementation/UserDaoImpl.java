@@ -137,13 +137,13 @@ public class UserDaoImpl extends BaseDaoImpl implements UserDao {
         final String email;
         try (Connection connection = ds.getConnection()) {
             JsonObject jsonObject = new JsonParser().parse(profileUpdateJson).getAsJsonObject();
-            email = jsonObject.get("email").getAsString();
+            email = jsonObject.get("user").getAsString();
             final String name = jsonObject.get("name").getAsString();
             final String about = jsonObject.get("about").getAsString();
-            final StringBuilder updatePrifileQuery = new StringBuilder("UPDATE ");
-            updatePrifileQuery.append(tableName);
-            updatePrifileQuery.append(" SET about = ?, name = ? WHERE email = ?");
-            try (PreparedStatement ps = connection.prepareStatement(updatePrifileQuery.toString())) {
+            final StringBuilder updateProfileQuery = new StringBuilder("UPDATE ");
+            updateProfileQuery.append(tableName);
+            updateProfileQuery.append(" SET about = ?, name = ? WHERE email = ?");
+            try (PreparedStatement ps = connection.prepareStatement(updateProfileQuery.toString())) {
                 ps.setString(1, about);
                 ps.setString(2, name);
                 ps.setString(3, email);

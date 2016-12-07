@@ -1,6 +1,7 @@
 package ru.mail.park.dao.implementation;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ru.mail.park.dao.PostDao;
 import ru.mail.park.model.Post;
@@ -224,6 +225,30 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, new Gson().fromJson(postRestoreJson, Object.class));
+    }
+
+    public Response update(String postUpdateJson){
+        final Long postId;
+        try (Connection connection = ds.getConnection()) {
+            JsonObject jsonObject = new JsonParser().parse(postUpdateJson).getAsJsonObject();
+            postId = jsonObject.get("post").getAsLong();
+            final String newMessage = jsonObject.get("message").getAsString();
+            final StringBuilder updatePostQuery = new StringBuilder("UPDATE ");
+            updatePostQuery.append(tableName);
+            updatePostQuery.append(" SET message = ? WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(updatePostQuery.toString())) {
+                ps.setString(1, newMessage);
+                ps.setLong(2,postId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return details(postId, null);
     }
 
     private Long getThreadIdByPostId(Long postId){
