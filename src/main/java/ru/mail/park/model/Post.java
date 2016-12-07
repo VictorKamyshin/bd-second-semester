@@ -9,7 +9,7 @@ import java.sql.SQLException;
  * Created by victor on 23.11.16.
  */
 public class Post {
-    public static final String TABLE_NAME = "posts";
+    public static final String TABLE_NAME = "Posts";
     public static final String DATE_COLUMN = "date"; //так-то это нифига не столбцы, а поля джсона
     public static final String DISLIKES_COLUMN = "dislikes";
     public static final String FORUM_COLUMN = "forum";
@@ -151,26 +151,6 @@ public class Post {
 
     public String getPath() {
         return path;
-    }
-
-    public boolean isApproved() {
-        return isApproved;
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public boolean isEdited() {
-        return isEdited;
-    }
-
-    public boolean isHighlighted() {
-        return isHighlighted;
-    }
-
-    public boolean isSpam() {
-        return isSpam;
     }
 
     public void setDate(String date) {

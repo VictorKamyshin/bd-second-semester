@@ -20,7 +20,7 @@ public class Thread {
     private static final String DATE_COLUMN = "date";
     private static final String MESSAGE_COLUMN = "message";
     private static final String SLUG_COLUMN = "slug";
-    private static final String ISDELETED_COLUMN = "getIsDeleted";
+    private static final String ISDELETED_COLUMN = "isDeleted";
 
     private long id;
     private Object user;
@@ -41,7 +41,7 @@ public class Thread {
         date = object.get(DATE_COLUMN).getAsString();
         message = object.get(MESSAGE_COLUMN).getAsString();
         slug = object.get(SLUG_COLUMN).getAsString();
-        isDeleted = object.get(ISDELETED_COLUMN).getAsBoolean();
+        isDeleted = object.has(ISDELETED_COLUMN) ?object.get(ISDELETED_COLUMN).getAsBoolean() : false;
     }
 
     public Thread(ResultSet resultSet) throws SQLException {
@@ -72,7 +72,7 @@ public class Thread {
         return title;
     }
 
-    public Boolean getClosed() {
+    public Boolean getIsClosed() {
         return isClosed;
     }
 
@@ -88,7 +88,7 @@ public class Thread {
         return slug;
     }
 
-    public Boolean getDeleted() {
+    public Boolean getIsDeleted() {
         return isDeleted;
     }
 

@@ -72,25 +72,30 @@ public class UserDaoImpl extends BaseDaoImpl implements UserDao {
     public Response details(String userEmail){
         final User user;
         try (Connection connection = ds.getConnection()) {
-            StringBuilder getUserDetails = new StringBuilder("SELECT users.*, ");
+            StringBuilder getUserDetails = new StringBuilder("SELECT Users.*, ");
             getUserDetails.append("group_concat(distinct f1.follower_email) as followers, ");
             getUserDetails.append("group_concat(distinct f2.following_email) as following, ");
-            getUserDetails.append("group_concat(distinct s.thread_id) as subscriptions");
-            getUserDetails.append(" FROM users");
-            getUserDetails.append(" LEFT JOIN followers f1 on f1.follower_email = user.email");
-            getUserDetails.append(" LEFT JOIN followers f2 on f2.following_emal = user.email");
-            getUserDetails.append(" LEFT JOIN subscription s on s.user_email = user.email");
-            getUserDetails.append(" WHERE users.email = ?");
+            getUserDetails.append("group_concat(distinct s.thread) as subscriptions");
+            getUserDetails.append(" FROM Users");
+            getUserDetails.append(" LEFT JOIN Followers f1 on f1.follower_email = Users.email");
+            getUserDetails.append(" LEFT JOIN Followers f2 on f2.following_email = Users.email");
+            getUserDetails.append(" LEFT JOIN Subscribe s on s.user = Users.email");
+            getUserDetails.append(" WHERE Users.email = ?");
             try (PreparedStatement ps = connection.prepareStatement(getUserDetails.toString())) {
                 ps.setString(1,userEmail);
                 try (ResultSet resultSet = ps.executeQuery()) {
                     resultSet.next();
                     user = new User(resultSet);
                 } catch (Exception e) {
+                    e.printStackTrace();
                     return new Response(ResponseStatus.NOT_FOUND);
                 }
+            } catch ( Exception e) {
+                e.printStackTrace();
+                return new Response(ResponseStatus.INVALID_REQUEST);
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             return new Response(ResponseStatus.INCORRECT_REQUEST);
         }
         return new Response(ResponseStatus.OK,user);

@@ -29,7 +29,7 @@ public class ForumDaoImpl extends BaseDaoImpl implements ForumDao {
             forum = new Forum(new JsonParser().parse(forumCreateJson).getAsJsonObject());
             final StringBuilder builder = new StringBuilder("INSERT INTO ");
             builder.append(tableName);
-            builder.append("(name, short_name, user_email) VALUES (?, ?, ?)");
+            builder.append("(name, short_name, user) VALUES (?, ?, ?)");
             final String query = builder.toString();
             try (PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, forum.getName());

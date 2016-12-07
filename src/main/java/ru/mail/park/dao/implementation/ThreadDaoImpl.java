@@ -3,6 +3,7 @@ package ru.mail.park.dao.implementation;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import ru.mail.park.dao.ThreadDao;
+import ru.mail.park.model.Post;
 import ru.mail.park.model.Thread;
 import ru.mail.park.response.Response;
 import ru.mail.park.response.ResponseStatus;
@@ -24,6 +25,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         this.tableName = Thread.TABLE_NAME;
         this.subscriptionsName = Thread.SUBSCRIPTION_TABLE_NAME;
         this.ds = dataSource;
+        this.postTableName = Post.TABLE_NAME;
     }
 
     @Override
@@ -33,17 +35,17 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             thread = new Thread(new JsonParser().parse(threadCreateJson).getAsJsonObject());
             final StringBuilder threadCreate = new StringBuilder("INSERT INTO ");
             threadCreate.append(tableName);
-            threadCreate.append("(user_email, forum_short_name, title, isClosed," +
-                    " date, message, slug, getIsDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            threadCreate.append("(user, forum, title, isClosed," +
+                    " date, message, slug, isDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             try (PreparedStatement ps = connection.prepareStatement(threadCreate.toString(), Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, thread.getUser().toString());
                 ps.setString(2, thread.getForum().toString());
                 ps.setString(3, thread.getTitle());
-                ps.setBoolean(4, thread.getClosed());
+                ps.setBoolean(4, thread.getIsClosed());
                 ps.setString(5,thread.getDate());
                 ps.setString(6, thread.getMessage());
                 ps.setString(7, thread.getSlug());
-                ps.setBoolean(8, thread.getDeleted());
+                ps.setBoolean(8, thread.getIsDeleted());
                 ps.executeUpdate();
                 try (ResultSet resultSet = ps.getGeneratedKeys()) {
                     resultSet.next();
@@ -152,7 +154,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             //теперь идем отмечать как удаленные все посты из этого треда
             final StringBuilder postsRemoveQuery = new StringBuilder("UPDATE ");
             postsRemoveQuery.append(postTableName);
-            postsRemoveQuery.append(" SET isDeleted = 1 WHRER thread = ?");
+            postsRemoveQuery.append(" SET isDeleted = 1 WHERE thread = ?");
             try (PreparedStatement ps = connection.prepareStatement(postsRemoveQuery.toString())) {
                 ps.setLong(1, threadId);
                 ps.execute();
@@ -172,7 +174,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             final Long threadId = new JsonParser().parse(threadRestoreJson).getAsJsonObject().get("thread").getAsLong();
             final StringBuilder threadRestoreQuery = new StringBuilder("UPDATE ");
             threadRestoreQuery.append(tableName);
-            threadRestoreQuery.append(" SET isDeleted = 1 WHERE id = ?");
+            threadRestoreQuery.append(" SET isDeleted = 0 WHERE id = ?");
             try (PreparedStatement ps = connection.prepareStatement(threadRestoreQuery.toString())) {
                 ps.setLong(1, threadId);
                 ps.execute();
@@ -182,7 +184,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             //теперь идем восстанавливать все посты из этого треда
             final StringBuilder postsRestoreQuery = new StringBuilder("UPDATE ");
             postsRestoreQuery.append(postTableName);
-            postsRestoreQuery.append(" SET isDeleted = 1 WHRER thread = ?");
+            postsRestoreQuery.append(" SET isDeleted = 0 WHERE thread = ?");
             try (PreparedStatement ps = connection.prepareStatement(postsRestoreQuery.toString())) {
                 ps.setLong(1, threadId);
                 ps.execute();

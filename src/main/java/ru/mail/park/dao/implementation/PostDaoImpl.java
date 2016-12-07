@@ -45,7 +45,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                     }
                 }
             } else {//если у нас есть родитель, то мы сгенерировали путь
-                final String getCountOfRootPosts  = "SELECT count_of_root_posts FROM threads WHERE id=?";
+                final String getCountOfRootPosts  = "SELECT count_of_root_posts FROM Threads WHERE id=?";
                 try(PreparedStatement ps = connection.prepareStatement(getCountOfRootPosts)){
                     ps.setInt(1, Integer.parseInt(post.getThread().toString()));
                     try(ResultSet resultSet = ps.executeQuery()){
@@ -64,8 +64,8 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             //теперь у нас есть материальный путь для создаваемого поста - и это ценой всего двух точечных запросов
             final StringBuilder createPost = new StringBuilder("INSERT INTO ");
             createPost.append(tableName);
-            createPost.append("(date, forum_short_name, isApproved, isDeleted, isEdited, isHighlighted, isSpam," +
-                    " message, parent_id, thread_id, user_email, material_path)");
+            createPost.append("(date, forum, isApproved, isDeleted, isEdited, isHighlighted, isSpam," +
+                    " message, parent, thread, user, material_path)");
             createPost.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             try (PreparedStatement ps = connection.prepareStatement(createPost.toString(), Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, post.getDate());
@@ -89,7 +89,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             } catch (SQLException e) {
                 return handeSQLException(e);
             }
-            final StringBuilder updateThreads = new StringBuilder("UPDATE threads SET posts = posts + 1"); //"WHERE id = ?";
+            final StringBuilder updateThreads = new StringBuilder("UPDATE Threads SET posts = posts + 1"); //"WHERE id = ?";
             if(post.getParentId()!=null){
                 final StringBuilder updatePostChilds = new StringBuilder("UPDATE ");
                 updatePostChilds.append(tableName);
@@ -171,7 +171,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 return handeSQLException(e);
             }
 
-            final String updateThreadsQuery = "UPDATE threads SET posts = posts + 1 WHERE id=?";
+            final String updateThreadsQuery = "UPDATE Threads SET posts = posts + 1 WHERE id=?";
             try (PreparedStatement ps = connection.prepareStatement(updateThreadsQuery)) {
                 //нужно откуда-то добыть адйи поста
                 final Long threadId = getThreadIdByPostId(postId); //добыл - приверяй.
@@ -206,7 +206,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 return new Response(ResponseStatus.NOT_FOUND);
             }
 
-            final String updateThreadsQuery = "UPDATE threads SET posts = posts + 1 WHERE id=?";
+            final String updateThreadsQuery = "UPDATE Threads SET posts = posts + 1 WHERE id=?";
             try (PreparedStatement ps = connection.prepareStatement(updateThreadsQuery)) {
                 //нужно откуда-то добыть адйи поста
                 final Long threadId = getThreadIdByPostId(postId); //добыл - приверяй.

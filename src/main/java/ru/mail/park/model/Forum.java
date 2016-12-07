@@ -9,7 +9,7 @@ import java.sql.SQLException;
  * Created by victor on 23.11.16.
  */
 public class Forum {
-    public static final String TABLE_NAME = "forums";
+    public static final String TABLE_NAME = "Forums";
     private static final String ID_COLUMN = "id";
     private static final String NAME_COLUMN = "name";
     private static final String SHORTNAME_COLUMN = "short_name";
