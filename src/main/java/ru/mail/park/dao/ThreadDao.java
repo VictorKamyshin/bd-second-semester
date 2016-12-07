@@ -19,4 +19,6 @@ public interface ThreadDao extends BaseDao {
     public Response restore(String threadRestoreJson);
 
     public Response update(String threadUpdateJson);
+
+    public Response vote(String threadVoteJson);
 }

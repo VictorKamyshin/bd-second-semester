@@ -51,4 +51,7 @@ public class ThreadController extends AbstractController{
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ForumApiResponse update(@RequestBody String body) { return new ForumApiResponse(threadDao.update(body)); }
 
+    @RequestMapping(value = "/vote", method = RequestMethod.POST)
+    public ForumApiResponse vote(@RequestBody String body) { return new ForumApiResponse(threadDao.vote(body)); }
+
 }

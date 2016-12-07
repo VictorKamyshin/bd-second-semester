@@ -199,6 +199,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         return new Response(ResponseStatus.OK, new Gson().fromJson(threadRestoreJson, Object.class));
     }
 
+    @Override
     public Response update(String threadUpdateJson){
         final Long threadId;
         try (Connection connection = ds.getConnection()) {
@@ -213,6 +214,34 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
                 ps.setString(1, newMessage);
                 ps.setString(2,newSlug);
                 ps.setLong(3,threadId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                return handeSQLException(e);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return details(threadId, null);
+    }
+
+    public Response vote(String threadVoteJson) {
+        final Long threadId;
+        try (Connection connection = ds.getConnection()) {
+            JsonObject jsonObject = new JsonParser().parse(threadVoteJson).getAsJsonObject();
+            threadId = jsonObject.get("thread").getAsLong();
+            final Integer threadVote = jsonObject.get("vote").getAsInt();
+            final StringBuilder threadVoteQuery = new StringBuilder("UPDATE ");
+            threadVoteQuery.append(tableName);
+            if(threadVote>0){
+                threadVoteQuery.append(" likes = likes + 1, points = points + 1");
+            } else {
+                threadVoteQuery.append(" dislikes = dislikes + 1, points = points - 1");
+            }
+            threadVoteQuery.append(" WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(threadVoteQuery.toString())) {
+                ps.setInt(1, threadVote);
+                ps.setLong(2,threadId);
                 ps.executeUpdate();
             } catch (SQLException e) {
                 return handeSQLException(e);
