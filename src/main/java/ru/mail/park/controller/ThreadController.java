@@ -1,7 +1,9 @@
 package ru.mail.park.controller;
 
 import org.springframework.web.bind.annotation.*;
+import ru.mail.park.dao.PostDao;
 import ru.mail.park.dao.ThreadDao;
+import ru.mail.park.dao.implementation.PostDaoImpl;
 import ru.mail.park.dao.implementation.ThreadDaoImpl;
 import ru.mail.park.response.ForumApiResponse;
 
@@ -15,6 +17,8 @@ import javax.sql.DataSource;
 public class ThreadController extends AbstractController{
     private ThreadDao threadDao;
 
+    private PostDao postDao;
+
     public ThreadController(DataSource dataSource) {
         super(dataSource);
     }
@@ -23,6 +27,7 @@ public class ThreadController extends AbstractController{
     void init() {
         super.init();
         threadDao = new ThreadDaoImpl(dataSource);
+        postDao = new PostDaoImpl(dataSource);
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
@@ -59,5 +64,14 @@ public class ThreadController extends AbstractController{
 
     @RequestMapping(value = "/unsubscribe", method = RequestMethod.POST)
     public ForumApiResponse unsubscribe(@RequestBody String body) { return new ForumApiResponse(threadDao.unsubscribe(body)); }
+
+    @RequestMapping(value = "/listPosts", method = RequestMethod.GET, params = {"thread"})
+    public ForumApiResponse listPosts(@RequestParam(value = "thread") Long threadId,
+                                         @RequestParam(value = "since", required = false) String since,
+                                         @RequestParam(value = "limit", required = false) Integer limit,
+                                         @RequestParam(value = "order", required = false) String order,
+                                         @RequestParam(value = "sort", required = false) String sort) {
+        return new ForumApiResponse(postDao.list(null, threadId, since, limit, order, sort, null));
+    }
 
 }

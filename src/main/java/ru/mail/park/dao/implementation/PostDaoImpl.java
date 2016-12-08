@@ -316,9 +316,9 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             }
             if("parent_tree".equals(sort)&&limit!=null){
                 if(order==null||"desc".equals(order)){
-                    postsListQuery.append(" AND reverse_path < ?");
+                    postsListQuery.append("AND reverse_path <= ? ");
                 } else {
-                    postsListQuery.append("AND material_path > ?"); //потому что обычный лимит уже не сработает
+                    postsListQuery.append("AND material_path < ? "); //потому что обычный лимит уже не сработает
                 }
             }
 
@@ -358,16 +358,18 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 }
                 if("parent_tree".equals(sort)&&limit!=null){
                     if((order==null||"desc".equals(order))){
+                        final String tempStr = Integer.toString(9999-limit);
+                        ps.setString(fieldCounter, tempStr);
+                        fieldCounter++;
+                        System.out.println(tempStr);
+                    } else {
                         final StringBuilder tempStr = new StringBuilder(Integer.toString(limit));
                         while(tempStr.length()<4){
                             tempStr.insert(0,"0");
                         }
                         ps.setString(fieldCounter, tempStr.toString());
                         fieldCounter++;
-                    } else {
-                        final String tempStr = Integer.toString(9999-limit);
-                        ps.setString(fieldCounter, tempStr);
-                        fieldCounter++;
+                        System.out.println(tempStr);
                     }
                 }
                 if(limit!=null&&!"parent_tree".equals(sort)){
