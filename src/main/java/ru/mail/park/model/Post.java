@@ -25,7 +25,7 @@ public class Post {
     public static final String POINTS_COLUMN = "points";
     public static final String THREAD_COLUMN = "thread";
     public static final String USER_COLUMN = "user";
-    public static final String PATH_COLUMN = "path";
+    public static final String PATH_COLUMN = "material_path";
 
     private String date;
     private long dislikes;

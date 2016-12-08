@@ -48,4 +48,20 @@ public class PostController extends  AbstractController{
     @RequestMapping(value = "/vote", method = RequestMethod.POST)
     public ForumApiResponse vote(@RequestBody String body) { return new ForumApiResponse(postDao.vote(body)); }
 
+    @RequestMapping(value = "/list", method = RequestMethod.GET, params = {"forum"})
+    public ForumApiResponse listByForum(@RequestParam(value = "forum") String forum,
+                                     @RequestParam(value = "since", required = false) String since,
+                                     @RequestParam(value = "limit", required = false) Integer limit,
+                                     @RequestParam(value = "order", required = false) String order) {
+        return new ForumApiResponse(postDao.list(forum, null, since, limit, order, null, null));
+    }
+
+    @RequestMapping(value = "/list", method = RequestMethod.GET, params = {"thread"})
+    public ForumApiResponse listByThread(@RequestParam(value = "thread") Long threadId,
+                                 @RequestParam(value = "since", required = false) String since,
+                                 @RequestParam(value = "limit", required = false) Integer limit,
+                                 @RequestParam(value = "order", required = false) String order) {
+        return new ForumApiResponse(postDao.list(null, threadId, since, limit, order, null, null));
+    }
+
 }

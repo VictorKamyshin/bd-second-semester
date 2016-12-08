@@ -10,6 +10,7 @@ import ru.mail.park.response.ResponseStatus;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -27,22 +28,32 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
         try(Connection connection = ds.getConnection()){
             post = new Post(new JsonParser().parse(postCreateJson).getAsJsonObject());
             String postPath = "";
+            String postReversePath = "";
 
             if (post.getParentId() != null) {
-                final StringBuilder selectParendPath = new StringBuilder("SELECT material_path, count_of_childs FROM ");
+                final StringBuilder selectParendPath = new StringBuilder("SELECT material_path, count_of_childs, reverse_path FROM ");
                 selectParendPath.append(tableName);
                 selectParendPath.append(" WHERE id = ?;");
                 try (PreparedStatement ps = connection.prepareStatement(selectParendPath.toString())) {
                     ps.setLong(1, post.getParentId());
                     try (ResultSet resultSet = ps.executeQuery()) {
                         resultSet.next();
-                        String parentPath = resultSet.getString("path");
+
+                        String parentPath = resultSet.getString("material_path");
+                        String reverseParentPath = resultSet.getString("reverse_path");
+
+                        final StringBuilder reversePathBuilder = new StringBuilder(Integer.toString(resultSet.getInt("count_of_childs")));
                         final StringBuilder pathBuilder = new StringBuilder(Integer.toString(resultSet.getInt("count_of_childs")));
                         while(pathBuilder.length()<4){
-                            pathBuilder.append("0",0,1);
+                            pathBuilder.insert(0,"0");
+                            reversePathBuilder.insert(0,"0");
                         }
-                        pathBuilder.append(parentPath,0,parentPath.length());
+
+                        pathBuilder.insert(0, parentPath); //добавили родительский путь в начало
+                        reversePathBuilder.insert(0,reverseParentPath);
+
                         postPath = pathBuilder.toString();
+                        postReversePath = reversePathBuilder.toString();
                     }
                 }
             } else {//если у нас есть родитель, то мы сгенерировали путь
@@ -51,11 +62,13 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                     ps.setInt(1, Integer.parseInt(post.getThread().toString()));
                     try(ResultSet resultSet = ps.executeQuery()){
                         resultSet.next();
+                        final StringBuilder reversePathBuilder = new StringBuilder(Integer.toString(9999 - resultSet.getInt("count_of_root_posts")));
                         final StringBuilder pathBuilder = new StringBuilder(Integer.toString(resultSet.getInt("count_of_root_posts")));
                         while(pathBuilder.length()<4){
                             pathBuilder.insert(0, "0");
                         }
                         postPath = pathBuilder.toString();
+                        postReversePath = reversePathBuilder.toString();
                     }
                 }
             }
@@ -66,8 +79,8 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             final StringBuilder createPost = new StringBuilder("INSERT INTO ");
             createPost.append(tableName);
             createPost.append("(date, forum, isApproved, isDeleted, isEdited, isHighlighted, isSpam," +
-                    " message, parent, thread, user, material_path)");
-            createPost.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    " message, parent, thread, user, material_path, reverse_path)");
+            createPost.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             try (PreparedStatement ps = connection.prepareStatement(createPost.toString(), Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, post.getDate());
                 ps.setString(2, post.getForum().toString());
@@ -81,6 +94,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 ps.setLong(10, Long.parseLong(post.getThread().toString()));
                 ps.setString(11, post.getUser().toString());
                 ps.setString(12, postPath);
+                ps.setString(13, postReversePath);
                 ps.executeUpdate();
                 try (ResultSet resultSet = ps.getGeneratedKeys()) {
                     resultSet.next();
@@ -279,7 +293,122 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return details(postId, null);
+    }
 
+    @Override
+    public Response list(String forum, Long thread, String since, Integer limit, String order, String sort, String[] related){
+        ArrayList<Post> posts = new ArrayList<>(); //крч, объявили список постов
+        if((forum==null&&thread==null)||(forum!=null&&thread!=null)){
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        } //такого запроса нам приходить не должно
+        try (Connection connection = ds.getConnection()) {
+            final StringBuilder postsListQuery = new StringBuilder("SELECT * FROM ");
+            postsListQuery.append(tableName);
+
+            postsListQuery.append(" WHERE ");
+            if(forum!=null){
+                postsListQuery.append("forum = ? ");
+            } else {
+                postsListQuery.append("thread = ? ");
+            }
+            if(since!=null){
+                postsListQuery.append("AND date > ? ");
+            }
+            if("parent_tree".equals(sort)&&limit!=null){
+                if(order==null||"desc".equals(order)){
+                    postsListQuery.append(" AND reverse_path < ?");
+                } else {
+                    postsListQuery.append("AND material_path > ?"); //потому что обычный лимит уже не сработает
+                }
+            }
+
+            postsListQuery.append("ORDER BY ");
+            if(sort==null||"flat".equals(sort)) {
+                postsListQuery.append("date ");
+                if(order==null||"desc".equals(order)){
+                    postsListQuery.append("DESC ");
+                } else {
+                    postsListQuery.append("ASC ");
+                }
+            } else {
+                if(order==null||"desc".equals(order)){
+                    postsListQuery.append("reverse_path ");
+                } else {
+                    postsListQuery.append("material_path ");
+                }
+            }//теперь мы знаем, по какому полю сортируемся
+
+            if(limit!=null&&!"parent_tree".equals(sort)){
+                postsListQuery.append("LIMIT ?");
+            } // related пока не играет
+
+            System.out.println(postsListQuery.toString()); //хоть посмотрим, что за покемонов мы насобиралис
+            try (PreparedStatement ps = connection.prepareStatement(postsListQuery.toString())) {
+                Integer fieldCounter = 1;
+                if(forum!=null){
+                    ps.setString(fieldCounter,forum);
+                    fieldCounter++;
+                } else {
+                    ps.setLong(fieldCounter, thread);
+                    fieldCounter++;
+                }
+                if(since!=null){
+                    ps.setString(fieldCounter,since);
+                    fieldCounter++;
+                }
+                if("parent_tree".equals(sort)&&limit!=null){
+                    if((order==null||"desc".equals(order))){
+                        final StringBuilder tempStr = new StringBuilder(Integer.toString(limit));
+                        while(tempStr.length()<4){
+                            tempStr.insert(0,"0");
+                        }
+                        ps.setString(fieldCounter, tempStr.toString());
+                        fieldCounter++;
+                    } else {
+                        final String tempStr = Integer.toString(9999-limit);
+                        ps.setString(fieldCounter, tempStr);
+                        fieldCounter++;
+                    }
+                }
+                if(limit!=null&&!"parent_tree".equals(sort)){
+                    ps.setInt(fieldCounter,limit);
+                }
+
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    while(resultSet.next()) {
+                        posts.add(new Post(resultSet));
+                    }
+                } catch (SQLException e) {
+                    return handeSQLException(e);
+                } //типо как-то собрали этот список постов
+                //теперь, может быть, по ним надо пройтись и дописать релейтед
+                for(Post post:posts) { //можно ли избавиться от точечных запросов и делать их одной пачкой? хз
+                    //теоретически - да, тем, юзеров и форумов всяко меньше, чем постов
+                    //форум - так вообще один.
+                    //пока - пофиг, но вообще это узкое мето и на него будем смотреть в первую очередь в дальнейшем
+                    //юзеров - джоиним, форум добываем одним запросом, треды - хз, будем думать
+                    if (related != null) {
+                        if (Arrays.asList(related).contains("user")) {
+                            final String email = post.getUser().toString();
+                            post.setUser(new UserDaoImpl(ds).details(email).getObject());
+                        }
+                        if (Arrays.asList(related).contains("forum")) {
+                            final String forumShortName = post.getForum().toString();
+                            post.setForum(new ForumDaoImpl(ds).details(forumShortName, null).getObject());
+                        }
+                        if (Arrays.asList(related).contains("thread")) {
+                            final Long threadId = Long.parseLong(post.getThread().toString());
+                            post.setForum(new ThreadDaoImpl(ds).details(threadId, null).getObject());
+                        }
+                    }
+                }
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+
+        return new Response(ResponseStatus.OK, posts);
     }
 
     private Long getThreadIdByPostId(Long postId){
