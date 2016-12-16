@@ -33,7 +33,7 @@ public class ForumDaoImpl extends BaseDaoImpl implements ForumDao {
             final String query = builder.toString();
             try (PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, forum.getName());
-                ps.setString(2, forum.getShortName());
+                ps.setString(2, forum.getShort_name());
                 ps.setString(3, forum.getUser().toString());
                 ps.executeUpdate();
                 try (ResultSet resultSet = ps.getGeneratedKeys()) {
@@ -75,6 +75,7 @@ public class ForumDaoImpl extends BaseDaoImpl implements ForumDao {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, forum);

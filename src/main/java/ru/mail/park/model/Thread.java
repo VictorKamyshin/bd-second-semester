@@ -24,6 +24,7 @@ public class Thread {
     public static final String LIKES_COLUMN = "likes";
     public static final String DISLIKES_COLUMN = "dislikes";
     public static final String POINTS_COLUMN = "points";
+    public static final String POSTS_COLUMN = "posts";
 
     private long id;
     private Object user;
@@ -37,6 +38,7 @@ public class Thread {
     private Integer likes;
     private Integer dislikes;
     private Integer points;
+    private Long posts;
 
     public Thread(JsonObject object) {
         id = object.has(ID_COLUMN) ? object.get(ID_COLUMN).getAsInt() : 0;
@@ -56,14 +58,22 @@ public class Thread {
         forum = resultSet.getString(FORUM_COLUMN);
         title = resultSet.getString(TITLE_COLUMN);
         isClosed = resultSet.getBoolean(ISCLOSED_COLUMN);
-        date = resultSet.getString(DATE_COLUMN);
+        date = resultSet.getString(DATE_COLUMN).substring(0, resultSet.getString(DATE_COLUMN).length()-2);
         message = resultSet.getString(MESSAGE_COLUMN);
         slug = resultSet.getString(SLUG_COLUMN);
         isDeleted = resultSet.getBoolean(ISDELETED_COLUMN);
         likes = resultSet.getInt(LIKES_COLUMN);
         dislikes = resultSet.getInt(DISLIKES_COLUMN);
         points = resultSet.getInt(POINTS_COLUMN);
+        posts = resultSet.getLong(POSTS_COLUMN);
+    }
 
+    public Long getPosts() {
+        return posts;
+    }
+
+    public void setPosts(Long posts) {
+        this.posts = posts;
     }
 
     public void setId(long id) {
@@ -112,6 +122,10 @@ public class Thread {
 
     public Integer getPoints() {
         return points;
+    }
+
+    public long getId() {
+        return id;
     }
 
     public void setUser(Object user) {

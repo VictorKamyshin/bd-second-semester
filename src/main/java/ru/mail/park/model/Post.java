@@ -72,8 +72,8 @@ public class Post {
         isEdited = resultSet.getBoolean(ISEDITED_COLUMN);
         isHighlighted = resultSet.getBoolean(ISHIGHLIGHTED_COLUMN);
         isSpam = resultSet.getBoolean(ISSPAM_COLUMN);
-        date = resultSet.getString(DATE_COLUMN);
-        thread = resultSet.getString(THREAD_COLUMN);
+        date = resultSet.getString(DATE_COLUMN).substring(0, resultSet.getString(DATE_COLUMN).length()-2);
+        thread = resultSet.getLong(THREAD_COLUMN);
         message = resultSet.getString(MESSAGE_COLUMN);
         user = resultSet.getString(USER_COLUMN);
         forum = resultSet.getString(FORUM_COLUMN);
@@ -81,6 +81,9 @@ public class Post {
         dislikes = resultSet.getInt(DISLIKES_COLUMN);
         points = resultSet.getInt(POINTS_COLUMN);
         path = resultSet.getString(PATH_COLUMN);
+        if (parentId == 0) {
+            parentId = null;
+        }
 
     }
 
@@ -137,7 +140,7 @@ public class Post {
         return message;
     }
 
-    public Long getParentId() {
+    public Long getParent() {
         return parentId;
     }
 
@@ -197,7 +200,7 @@ public class Post {
         this.message = message;
     }
 
-    public void setParentId(Long parentId) {
+    public void setParent(Long parentId) {
         this.parentId = parentId;
     }
 

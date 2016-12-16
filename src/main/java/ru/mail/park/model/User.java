@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Created by victor on 23.11.16.
@@ -52,16 +53,15 @@ public class User {
         isAnonymous = resultSet.getBoolean(ISANONYMOUS_COLUMN);
         name = resultSet.getString(NAME_COLUMN);
         username = resultSet.getString(USERNAME_COLUMN);
-
         try{
             listOfFollowers = resultSet.getString(FOLLOWERS_COLUMN).split(",");
-        } catch(NullPointerException e){
+        } catch(Exception e){
             listOfFollowers = new String[]{};
         }
 
         try{
             listOfFollowing = resultSet.getString(FOLLOWING_COLUMN).split(",");
-        } catch (NullPointerException e){
+        } catch (Exception e){
             listOfFollowing = new String[]{};
         }
 
@@ -71,7 +71,7 @@ public class User {
             for( Integer i = 0; i < threadsIds.length; i++) {
                 listOfSubscriptions[i] = Integer.parseInt(threadsIds[i]);
             }
-        } catch (NullPointerException e){
+        } catch (Exception e){
             listOfSubscriptions = new Integer[]{};
         }
 
@@ -111,19 +111,19 @@ public class User {
         return id;
     }
 
-    public Boolean getAnonymous() {
+    public Boolean getIsAnonymous() {
         return isAnonymous;
     }
 
-    public String[] getListOfFollowers() {
+    public String[] getFollowers() {
         return listOfFollowers;
     }
 
-    public String[] getListOfFollowing() {
+    public String[] getFollowing() {
         return listOfFollowing;
     }
 
-    public Integer[] getListOfSubscriptions() {
+    public Integer[] getSubscriptions() {
         return listOfSubscriptions;
     }
 
@@ -137,5 +137,29 @@ public class User {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public void setListOfFollowers(List<String> listOfFollowers) {
+        String[] temp = new String[listOfFollowers.size()];
+        for(Integer i = 0; i < listOfFollowers.size(); i++){
+            temp[i] = listOfFollowers.get(i);
+        }
+        this.listOfFollowers = temp;
+    }
+
+    public void setListOfFollowing(List<String> listOfFollowing) {
+        String[] temp = new String[listOfFollowing.size()];
+        for(Integer i = 0; i < listOfFollowing.size(); i++){
+            temp[i] = listOfFollowing.get(i);
+        }
+        this.listOfFollowing = temp;
+    }
+
+    public void setListOfSubscriptions(List<Integer> listOfSubscriptions) {
+        Integer[] temp = new Integer[listOfSubscriptions.size()];
+        for(Integer i = 0; i < listOfSubscriptions.size(); i++){
+            temp[i] = listOfSubscriptions.get(i);
+        }
+        this.listOfSubscriptions = temp;
     }
 }

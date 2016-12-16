@@ -30,12 +30,12 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             String postPath = "";
             String postReversePath = "";
 
-            if (post.getParentId() != null) {
+            if (post.getParent() != null) {
                 final StringBuilder selectParendPath = new StringBuilder("SELECT material_path, count_of_childs, reverse_path FROM ");
                 selectParendPath.append(tableName);
                 selectParendPath.append(" WHERE id = ?;");
                 try (PreparedStatement ps = connection.prepareStatement(selectParendPath.toString())) {
-                    ps.setLong(1, post.getParentId());
+                    ps.setLong(1, post.getParent());
                     try (ResultSet resultSet = ps.executeQuery()) {
                         resultSet.next();
 
@@ -90,7 +90,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 ps.setBoolean(6, post.getIsHighlighted());
                 ps.setBoolean(7, post.getIsSpam());
                 ps.setString(8, post.getMessage());
-                ps.setObject(9, post.getParentId());
+                ps.setObject(9, post.getParent());
                 ps.setLong(10, Long.parseLong(post.getThread().toString()));
                 ps.setString(11, post.getUser().toString());
                 ps.setString(12, postPath);
@@ -102,15 +102,16 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                     post.setPath(postPath);
                 }
             } catch (SQLException e) {
+                e.printStackTrace();
                 return handeSQLException(e);
             }
             final StringBuilder updateThreads = new StringBuilder("UPDATE Threads SET posts = posts + 1"); //"WHERE id = ?";
-            if(post.getParentId()!=null){
+            if(post.getParent()!=null){
                 final StringBuilder updatePostChilds = new StringBuilder("UPDATE ");
                 updatePostChilds.append(tableName);
                 updatePostChilds.append(" SET count_of_childs = count_of_childs + 1 WHERE id=?");
                 try(PreparedStatement ps = connection.prepareStatement(updatePostChilds.toString())){
-                    ps.setLong(1,post.getParentId());
+                    ps.setLong(1,post.getParent());
                     ps.executeUpdate();
                 } catch(Exception e) { //у поста появится еще один дочерний пост, хотя по логике это должно быть после создания самого поста
                     e.printStackTrace();
@@ -129,7 +130,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
 
         } catch(SQLException e){
             e.printStackTrace();
-            return new Response(ResponseStatus.INVALID_REQUEST); //если произошла ошибка при парсе джсона
+            return new Response(ResponseStatus.NOT_FOUND); //если произошла ошибка при парсе джсона
         }
         return new Response(ResponseStatus.OK, post);
     }
@@ -161,7 +162,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                     }
                     if (Arrays.asList(related).contains("thread")) {
                         final Long threadId = Long.parseLong(post.getThread().toString());
-                        post.setForum(new ThreadDaoImpl(ds).details(threadId, null).getObject());
+                        post.setThread(new ThreadDaoImpl(ds).details(threadId, null).getObject());
                     }
                 }
             }
@@ -186,7 +187,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 return handeSQLException(e);
             }
 
-            final String updateThreadsQuery = "UPDATE Threads SET posts = posts + 1 WHERE id=?";
+            final String updateThreadsQuery = "UPDATE Threads SET posts = posts - 1 WHERE id=?";
             try (PreparedStatement ps = connection.prepareStatement(updateThreadsQuery)) {
                 //нужно откуда-то добыть адйи поста
                 final Long threadId = getThreadIdByPostId(postId); //добыл - приверяй.
@@ -296,9 +297,9 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
     }
 
     @Override
-    public Response list(String forum, Long thread, String since, Integer limit, String order, String sort, String[] related){
+    public Response list(String forum, Long thread, String userEmail, String since, Integer limit, String order, String sort, String[] related){
         ArrayList<Post> posts = new ArrayList<>(); //крч, объявили список постов
-        if((forum==null&&thread==null)||(forum!=null&&thread!=null)){
+        if((forum==null&&thread==null&&userEmail==null)||(forum!=null&&thread!=null)){
             return new Response(ResponseStatus.INVALID_REQUEST);
         } //такого запроса нам приходить не должно
         try (Connection connection = ds.getConnection()) {
@@ -308,8 +309,10 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
             postsListQuery.append(" WHERE ");
             if(forum!=null){
                 postsListQuery.append("forum = ? ");
-            } else {
+            } else if(thread!=null){
                 postsListQuery.append("thread = ? ");
+            } else {
+                postsListQuery.append("user = ? ");
             }
             if(since!=null){
                 postsListQuery.append("AND date > ? ");
@@ -342,14 +345,17 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                 postsListQuery.append("LIMIT ?");
             } // related пока не играет
 
-            System.out.println(postsListQuery.toString()); //хоть посмотрим, что за покемонов мы насобиралис
+            //System.out.println(postsListQuery.toString()); //хоть посмотрим, что за покемонов мы насобиралис
             try (PreparedStatement ps = connection.prepareStatement(postsListQuery.toString())) {
                 Integer fieldCounter = 1;
                 if(forum!=null){
                     ps.setString(fieldCounter,forum);
                     fieldCounter++;
-                } else {
+                } else if(thread!=null){
                     ps.setLong(fieldCounter, thread);
+                    fieldCounter++;
+                } else {
+                    ps.setString(fieldCounter,userEmail);
                     fieldCounter++;
                 }
                 if(since!=null){
@@ -361,7 +367,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                         final String tempStr = Integer.toString(9999-limit);
                         ps.setString(fieldCounter, tempStr);
                         fieldCounter++;
-                        System.out.println(tempStr);
+                        //System.out.println(tempStr);
                     } else {
                         final StringBuilder tempStr = new StringBuilder(Integer.toString(limit));
                         while(tempStr.length()<4){
@@ -369,7 +375,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                         }
                         ps.setString(fieldCounter, tempStr.toString());
                         fieldCounter++;
-                        System.out.println(tempStr);
+                        //System.out.println(tempStr);
                     }
                 }
                 if(limit!=null&&!"parent_tree".equals(sort)){
@@ -400,7 +406,7 @@ public class PostDaoImpl extends BaseDaoImpl implements PostDao {
                         }
                         if (Arrays.asList(related).contains("thread")) {
                             final Long threadId = Long.parseLong(post.getThread().toString());
-                            post.setForum(new ThreadDaoImpl(ds).details(threadId, null).getObject());
+                            post.setThread(new ThreadDaoImpl(ds).details(threadId, null).getObject());
                         }
                     }
                 }

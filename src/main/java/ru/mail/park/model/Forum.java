@@ -42,7 +42,7 @@ public class Forum {
         return name;
     }
 
-    public String getShortName() {
+    public String getShort_name() {
         return shortName;
     }
 

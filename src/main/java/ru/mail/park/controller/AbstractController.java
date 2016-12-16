@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 /**
  * Created by victor on 23.11.16.
  */
-public class AbstractController {
+public abstract class AbstractController {
     protected final DataSource dataSource;
 
     @Autowired

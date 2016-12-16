@@ -1,7 +1,9 @@
 package ru.mail.park.controller;
 
 import org.springframework.web.bind.annotation.*;
+import ru.mail.park.dao.PostDao;
 import ru.mail.park.dao.UserDao;
+import ru.mail.park.dao.implementation.PostDaoImpl;
 import ru.mail.park.dao.implementation.UserDaoImpl;
 import ru.mail.park.response.ForumApiResponse;
 
@@ -14,6 +16,7 @@ import javax.sql.DataSource;
 @RequestMapping(value = "/db/api/user")
 public class UserController extends AbstractController {
     private UserDao userDao;
+    private PostDao postDao;
 
     public UserController(DataSource dataSource) {
         super(dataSource);
@@ -23,6 +26,7 @@ public class UserController extends AbstractController {
     void init() {
         super.init();
         userDao = new UserDaoImpl(dataSource);
+        postDao = new PostDaoImpl(dataSource);
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
@@ -48,5 +52,29 @@ public class UserController extends AbstractController {
     @RequestMapping(value = "/updateProfile", method = RequestMethod.POST)
     public ForumApiResponse updateProfile(@RequestBody String body) {
         return new ForumApiResponse(userDao.updateProfile(body));
+    }
+
+    @RequestMapping(value = "/listPosts", method = RequestMethod.GET)
+    public ForumApiResponse listPosts(@RequestParam(value = "user") String userEmail,
+                                      @RequestParam(value = "since", required = false) String since,
+                                      @RequestParam(value = "limit", required = false) Integer limit,
+                                      @RequestParam(value = "order", required = false) String order) {
+        return new ForumApiResponse(postDao.list(null, null, userEmail, since, limit, order, null, null));
+    }
+
+    @RequestMapping(value = "/listFollowers", method = RequestMethod.GET)
+    public ForumApiResponse listFollowers(@RequestParam(value = "user") String userEmail,
+                                      @RequestParam(value = "since_id", required = false) Long since,
+                                      @RequestParam(value = "limit", required = false) Integer limit,
+                                      @RequestParam(value = "order", required = false) String order) {
+        return new ForumApiResponse(userDao.list(userEmail,null, true, limit, order, since));
+    }
+
+    @RequestMapping(value = "/listFollowing", method = RequestMethod.GET)
+    public ForumApiResponse listFollowing(@RequestParam(value = "user") String userEmail,
+                                          @RequestParam(value = "since_id", required = false) Long since,
+                                          @RequestParam(value = "limit", required = false) Integer limit,
+                                          @RequestParam(value = "order", required = false) String order) {
+        return new ForumApiResponse(userDao.list(userEmail,null, false, limit, order, since));
     }
 }

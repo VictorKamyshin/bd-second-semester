@@ -11,6 +11,7 @@ import ru.mail.park.response.ResponseStatus;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -27,6 +28,18 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         this.subscriptionsName = Thread.SUBSCRIPTION_TABLE_NAME;
         this.ds = dataSource;
         this.postTableName = Post.TABLE_NAME;
+    }
+
+    @Override
+    public void truncateTable() {
+        try (Connection connection = ds.getConnection()) {
+            Truncator.truncByQuery(connection, "SET FOREIGN_KEY_CHECKS = 0;");
+            Truncator.truncByQuery(connection, "TRUNCATE TABLE " + tableName);
+            Truncator.truncByQuery(connection, "TRUNCATE TABLE " + subscriptionsName);
+            Truncator.truncByQuery(connection, "SET FOREIGN_KEY_CHECKS = 1;");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -63,8 +76,13 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
     }
 
     @Override
-    public Response details(long threadId, String[] related){
+    public Response details(long threadId, String[] related) {
         final Thread thread;
+        if (related != null) {
+            if (Arrays.asList(related).contains("thread")) {
+                return new Response(ResponseStatus.INCORRECT_REQUEST);
+            }
+        }
         try(Connection connection = ds.getConnection()){
             final StringBuilder threadDetails = new StringBuilder("SELECT * FROM ");
             threadDetails.append(tableName);
@@ -145,7 +163,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             final Long threadId = new JsonParser().parse(threadRemoveJson).getAsJsonObject().get("thread").getAsLong();
             final StringBuilder threadRemoveQuery = new StringBuilder("UPDATE ");
             threadRemoveQuery.append(tableName);
-            threadRemoveQuery.append(" SET isDeleted = 1 WHERE id = ?");
+            threadRemoveQuery.append(" SET isDeleted = 1, posts = 0 WHERE id = ?");
             try (PreparedStatement ps = connection.prepareStatement(threadRemoveQuery.toString())) {
                 ps.setLong(1, threadId);
                 ps.execute();
@@ -173,15 +191,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
     public Response restore(String threadRestoreJson){
         try(Connection connection = ds.getConnection()){
             final Long threadId = new JsonParser().parse(threadRestoreJson).getAsJsonObject().get("thread").getAsLong();
-            final StringBuilder threadRestoreQuery = new StringBuilder("UPDATE ");
-            threadRestoreQuery.append(tableName);
-            threadRestoreQuery.append(" SET isDeleted = 0 WHERE id = ?");
-            try (PreparedStatement ps = connection.prepareStatement(threadRestoreQuery.toString())) {
-                ps.setLong(1, threadId);
-                ps.execute();
-            } catch (SQLException e) {
-                return handeSQLException(e);
-            } //отметили тред как неудаленный
+
             //теперь идем восстанавливать все посты из этого треда
             final StringBuilder postsRestoreQuery = new StringBuilder("UPDATE ");
             postsRestoreQuery.append(postTableName);
@@ -189,9 +199,26 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             try (PreparedStatement ps = connection.prepareStatement(postsRestoreQuery.toString())) {
                 ps.setLong(1, threadId);
                 ps.execute();
-            } catch (SQLException e) {
-                return handeSQLException(e);
-            } //восстановил
+            }
+
+            Long countOfPosts = null;
+            try(PreparedStatement ps = connection.prepareStatement("SELECT COUNT(*) AS countPosts FROM Posts WHERE thread = ?")) {
+                ps.setLong(1, threadId);
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    resultSet.next();
+                    countOfPosts = resultSet.getLong("countPosts");
+                }
+            }
+
+            final StringBuilder threadRestoreQuery = new StringBuilder("UPDATE ");
+            threadRestoreQuery.append(tableName);
+            threadRestoreQuery.append(" SET isDeleted = 0, posts = ? WHERE id = ?");
+            try (PreparedStatement ps = connection.prepareStatement(threadRestoreQuery.toString())) {
+                ps.setLong(1,countOfPosts);
+                ps.setLong(2, threadId);
+                ps.execute();
+            }
+
         } catch(SQLException e){
             e.printStackTrace();
             return new Response(ResponseStatus.INVALID_REQUEST);
@@ -276,6 +303,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
         return new Response(ResponseStatus.OK, new Gson().fromJson(subscribeJson, Object.class));
     }
 
+    @Override
     public Response unsubscribe(String unsubscribeJson){
         try (Connection connection = ds.getConnection()) {
             final JsonObject jsonObject = new JsonParser().parse(unsubscribeJson).getAsJsonObject();
@@ -283,7 +311,7 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             final Long threadId = jsonObject.get("thread").getAsLong();
             final StringBuilder unsubscribeQuery = new StringBuilder("DELETE FROM ");
             unsubscribeQuery.append(subscriptionsName);
-            unsubscribeQuery.append("WHERE user = ? AND thread = ?");
+            unsubscribeQuery.append(" WHERE user = ? AND thread = ?");
             try (PreparedStatement ps = connection.prepareStatement(unsubscribeQuery.toString())) {
                 ps.setString(1,subscriberEmail);
                 ps.setLong(2,threadId);
@@ -296,6 +324,84 @@ public class ThreadDaoImpl extends  BaseDaoImpl implements ThreadDao {
             return new Response(ResponseStatus.INVALID_REQUEST);
         }
         return new Response(ResponseStatus.OK, new Gson().fromJson(unsubscribeJson, Object.class));
+    }
+
+    public Response list(String forum, String userEmail, String since, Integer limit, String order, String[] related){
+        ArrayList<Thread> threads = new ArrayList<>(); //крч, объявили список постов
+        if((forum==null&&userEmail==null)||(forum!=null&&userEmail!=null)){
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        } //такого запроса нам приходить не должно
+        try (Connection connection = ds.getConnection()) {
+            final StringBuilder threadListQuery = new StringBuilder("SELECT * FROM ");
+            threadListQuery.append(tableName);
+
+            threadListQuery.append(" WHERE ");
+            if(forum!=null){
+                threadListQuery.append("forum = ? ");
+            } else {
+                threadListQuery.append(" user = ? ");
+            }
+
+            if(since!=null) {
+                threadListQuery.append("AND date > ? ");
+            }
+
+            threadListQuery.append("ORDER BY date ");
+            if(order==null||"desc".equals(order)){
+                threadListQuery.append("DESC ");
+            } else {
+                threadListQuery.append("ASC ");
+            }
+            if(limit!=null){
+                threadListQuery.append("LIMIT ?");
+            } //собрали наш чудо-запрос
+            //System.out.println(threadListQuery.toString());
+            try (PreparedStatement ps = connection.prepareStatement(threadListQuery.toString())) {
+                Integer fieldCounter = 1;
+                if(forum!=null){
+                    ps.setString(fieldCounter,forum);
+                    fieldCounter++;
+                } else {
+                    ps.setString(fieldCounter,userEmail);
+                    fieldCounter++;
+                }
+
+                if(since!=null) {
+                    ps.setString(fieldCounter, since);
+                    fieldCounter++;
+                }
+
+                if(limit!=null){
+                    ps.setInt(fieldCounter, limit);
+                    fieldCounter++;
+                }
+
+                try (ResultSet resultSet = ps.executeQuery()) {
+                    while(resultSet.next()) {
+                        threads.add(new Thread(resultSet));
+                    }
+                } catch (SQLException e) {
+                    return handeSQLException(e);
+                }
+                //осталось обыграть релейтед
+                for(Thread thread:threads){
+                    if (related != null) {
+                        if (Arrays.asList(related).contains("user")) {
+                            final String email = thread.getUser().toString();
+                            thread.setUser(new UserDaoImpl(ds).details(email).getObject());
+                        }
+                        if (Arrays.asList(related).contains("forum")) {
+                            final String forumShortName = thread.getForum().toString();
+                            thread.setForum(new ForumDaoImpl(ds).details(forumShortName,null).getObject());
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+            return new Response(ResponseStatus.INVALID_REQUEST);
+        }
+        return new Response(ResponseStatus.OK, threads);
     }
 
 }

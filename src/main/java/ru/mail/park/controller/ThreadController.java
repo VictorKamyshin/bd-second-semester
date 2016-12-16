@@ -71,7 +71,16 @@ public class ThreadController extends AbstractController{
                                          @RequestParam(value = "limit", required = false) Integer limit,
                                          @RequestParam(value = "order", required = false) String order,
                                          @RequestParam(value = "sort", required = false) String sort) {
-        return new ForumApiResponse(postDao.list(null, threadId, since, limit, order, sort, null));
+        return new ForumApiResponse(postDao.list(null, threadId, null, since, limit, order, sort, null));
+    }
+
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public ForumApiResponse list(@RequestParam(value = "user", required = false) String user,
+                                 @RequestParam(value = "forum", required = false) String forum,
+                                      @RequestParam(value = "since", required = false) String since,
+                                      @RequestParam(value = "limit", required = false) Integer limit,
+                                      @RequestParam(value = "order", required = false) String order) {
+        return new ForumApiResponse(threadDao.list(forum, user, since, limit, order, null));
     }
 
 }

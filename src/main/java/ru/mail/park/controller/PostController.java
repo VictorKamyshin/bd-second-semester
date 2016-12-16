@@ -53,7 +53,7 @@ public class PostController extends  AbstractController{
                                      @RequestParam(value = "since", required = false) String since,
                                      @RequestParam(value = "limit", required = false) Integer limit,
                                      @RequestParam(value = "order", required = false) String order) {
-        return new ForumApiResponse(postDao.list(forum, null, since, limit, order, null, null));
+        return new ForumApiResponse(postDao.list(forum, null, null, since, limit, order, null, null));
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET, params = {"thread"})
@@ -61,7 +61,7 @@ public class PostController extends  AbstractController{
                                  @RequestParam(value = "since", required = false) String since,
                                  @RequestParam(value = "limit", required = false) Integer limit,
                                  @RequestParam(value = "order", required = false) String order) {
-        return new ForumApiResponse(postDao.list(null, threadId, since, limit, order, null, null));
+        return new ForumApiResponse(postDao.list(null, threadId, null, since, limit, order, null, null));
     }
 
 }

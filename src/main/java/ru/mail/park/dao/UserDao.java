@@ -15,4 +15,6 @@ public interface UserDao extends BaseDao {
     public Response details(String userEmail);
 
     public Response updateProfile(String updateProfileJson);
+
+    public Response list(String userEmail, String forum, Boolean isFollowing,Integer limit, String order, Long sinceId);
 }

@@ -34,4 +34,9 @@ public class CommonController extends AbstractController {
         commonDao.truncateAllTables();
         return new ForumApiResponse(new Response(ResponseStatus.OK));
     }
+
+    @RequestMapping(value = "/status", method = RequestMethod.GET)
+    public ForumApiResponse status() {
+        return new ForumApiResponse(commonDao.getCounts());
+    }
 }

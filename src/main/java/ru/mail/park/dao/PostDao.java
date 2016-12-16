@@ -18,5 +18,5 @@ public interface PostDao extends BaseDao {
 
     public Response vote(String postVoteJson);
 
-    public Response list(String forum, Long thread, String since, Integer limit, String order, String sort, String[] related);
+    public Response list(String forum, Long thread, String userEmail, String since, Integer limit, String order, String sort, String[] related);
 }

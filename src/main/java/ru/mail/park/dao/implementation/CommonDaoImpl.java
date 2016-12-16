@@ -24,10 +24,10 @@ public class CommonDaoImpl extends BaseDaoImpl implements CommonDao {
 
     @Override
     public void truncateAllTables() {
-        userDao.truncateTable();
-        forumDAO.truncateTable();
-        threadDAO.truncateTable();
         postDAO.truncateTable();
+        threadDAO.truncateTable();
+        forumDAO.truncateTable();
+        userDao.truncateTable();
     }
 
     @Override
